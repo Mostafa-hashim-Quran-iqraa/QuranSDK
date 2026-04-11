@@ -24,4 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "QuranSDK"
 include(":app")
- 
+include(":quranLib")

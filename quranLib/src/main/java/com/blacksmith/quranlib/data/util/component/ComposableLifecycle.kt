@@ -1,4 +1,4 @@
-package com.blacksmith.quranlib.component
+package com.blacksmith.quranlib.data.util.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect

@@ -1,4 +1,4 @@
-package com.blacksmith.quransdk
+package com.blacksmith.quranApp
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

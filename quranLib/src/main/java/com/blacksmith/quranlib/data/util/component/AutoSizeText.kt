@@ -1,4 +1,4 @@
-package com.blacksmith.quranlib.component
+package com.blacksmith.quranlib.data.util.component
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope

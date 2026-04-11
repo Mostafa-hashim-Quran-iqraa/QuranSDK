@@ -1,4 +1,4 @@
-package com.blacksmith.quransdk.ui.theme
+package com.blacksmith.quranApp.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

@@ -1,7 +1,6 @@
-package com.blacksmith.quranlib.helper
+package com.blacksmith.quranlib.data.util.helper
 
 import android.annotation.SuppressLint
-import android.content.res.Resources
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity

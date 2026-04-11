@@ -1,14 +1,12 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.kotlin.compose)
-//    alias(libs.plugins.androidLibrary)
-//    alias(libs.plugins.jetbrainsKotlinAndroid)
-//    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.blacksmith.quransdk"
+    namespace = "com.blacksmith.quranApp"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -16,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.blacksmith.quransdk"
+        applicationId = "com.blacksmith.QuranApp"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -35,8 +33,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlin {
         jvmToolchain(21)

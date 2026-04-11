@@ -1,4 +1,4 @@
-package com.blacksmith.quransdk
+package com.blacksmith.quranApp
 
 import org.junit.Test
 

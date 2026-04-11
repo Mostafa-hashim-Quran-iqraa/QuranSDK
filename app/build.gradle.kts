@@ -2,7 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt")
     alias(libs.plugins.ksp)
+    alias(libs.plugins.daggeHilt)
 }
 
 android {
@@ -15,7 +17,7 @@ android {
 
     defaultConfig {
         applicationId = "com.blacksmith.QuranApp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -49,6 +51,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -61,6 +64,20 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.androidx.material.icons.extended)
 
+    //lottie
+    implementation(libs.lottie.compose)
+    //glide
+    implementation(libs.glide.compose)
+    implementation(libs.glide)
+    ksp(libs.glide.compiler)
+
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    //encrypted shared prefs
+    implementation(libs.androidx.security.crypto)
     implementation(project(":quranLib"))
 }

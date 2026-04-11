@@ -26,7 +26,9 @@ open class MainViewModel @Inject constructor(
     var fontColors = mutableStateListOf<ColorModel>()
     var highlightColors = mutableStateListOf<ColorModel>()
     var pageToOpen by mutableIntStateOf(0)
-
+    var isOnlyWordHighlight by mutableStateOf(false)
+    var isNavigateToJuz by mutableStateOf(false)
+    var isNavigateToSura by mutableStateOf(false)
 
     init {
         initBGColorList()

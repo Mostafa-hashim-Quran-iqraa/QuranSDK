@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -26,9 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.Lifecycle
 import com.blacksmith.quranApp.R
 import com.blacksmith.quranApp.presentation.base.theme.White
@@ -84,7 +87,7 @@ fun QuranScreen(
 fun Content(context: Context = LocalContext.current, viewModel: QuranViewModel) {
     val context = LocalContext.current
     Surface(
-        color = krema, modifier = Modifier.fillMaxSize()
+        color = Color(viewModel.bgColor.toColorInt()), modifier = Modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier
@@ -114,25 +117,25 @@ fun Content(context: Context = LocalContext.current, viewModel: QuranViewModel) 
                             }
                         )
                         .padding(7.toDP),
-                    tint = Black,
-                    imageVector = Icons.Filled.ArrowBackIosNew,
+                    tint = Color(viewModel.fontColor.toColorInt()),
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "",
                 )
                 Text(
                     text = stringResource(R.string.quran),
                     modifier = Modifier.padding(start = 10.toDP),
-                    color = Black,
+                    color = Color(viewModel.fontColor.toColorInt()),
                     fontSize = 16.toSP,
                 )
             }
 
             QuranPageScreen(
                 isReversePager = !viewModel.isArabicLocale(),
-                fontColor = red_light,
-                suraHeaderColor = colorPrimary,
-                suraNameColor = colorPrimary,
-                highlightColor = colorPrimaryMoreLight,
-                pageBackground = krema
+                fontColor = Color(viewModel.fontColor.toColorInt()),
+                suraHeaderColor = Color(viewModel.surahHeaderColor.toColorInt()),
+                suraNameColor = Color(viewModel.surahTitleColor.toColorInt()),
+                highlightColor = Color(viewModel.highlightColor.toColorInt()),
+                pageBackground = Color(viewModel.bgColor.toColorInt()),
             )
         }
     }

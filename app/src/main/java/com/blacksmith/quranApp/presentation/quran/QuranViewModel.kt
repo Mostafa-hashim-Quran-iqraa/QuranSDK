@@ -20,7 +20,15 @@ import javax.inject.Inject
 open class QuranViewModel @Inject constructor(
 ) :
     BaseViewModel() {
-
+    var pageToOpen by mutableIntStateOf(0)
+    var isOnlyWordHighlight by mutableStateOf(false)
+    var isEnableJuzClick by mutableStateOf(false)
+    var isEnableSuraClick by mutableStateOf(false)
+    var bgColor by mutableStateOf("")
+    var fontColor by mutableStateOf("")
+    var surahHeaderColor by mutableStateOf("")
+    var surahTitleColor by mutableStateOf("")
+    var highlightColor by mutableStateOf("")
 
 
     fun onDispose() {

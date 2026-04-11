@@ -44,6 +44,7 @@ import com.blacksmith.quranApp.presentation.base.theme.gray_400
 import com.blacksmith.quranApp.presentation.base.theme.transparent
 import com.blacksmith.quranApp.presentation.quran.QuranActivity
 import com.blacksmith.quranlib.data.util.helper.toSP
+import com.blacksmith.quranlib.presentation.theme.krema
 
 @Composable
 fun MainHomeScreen(
@@ -375,7 +376,27 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                                 Intent(
                                     context,
                                     QuranActivity::class.java
-                                )
+                                ).apply {
+                                    putExtra("pageToOpen", viewModel.pageToOpen)
+                                    putExtra("isOnlyWordHighlight", viewModel.isOnlyWordHighlight)
+                                    putExtra("isEnableJuzClick", viewModel.isEnableJuzClick)
+                                    putExtra("isEnableSuraClick", viewModel.isEnableSuraClick)
+                                    //bg color
+                                    val selectedBGColor = viewModel.bgColors.firstOrNull { it.selected }
+                                    putExtra("selectedBGColor", selectedBGColor?.colorCode?: "FDF8F2")
+                                    //font color
+                                    val selectedFontColor = viewModel.fontColors.firstOrNull { it.selected }
+                                    putExtra("selectedFontColor", selectedFontColor?.colorCode?: "000000")
+                                    //sura header
+                                    val selectedSurahHeaderColor = viewModel.surahHeaderColors.firstOrNull { it.selected }
+                                    putExtra("selectedSurahHeaderColor", selectedSurahHeaderColor?.colorCode?: "000000")
+                                    //sura title color
+                                    val selectedSurahTitleColor = viewModel.surahTitleColors.firstOrNull { it.selected }
+                                    putExtra("selectedSurahTitleColor", selectedSurahTitleColor?.colorCode?: "000000")
+                                    //highlight color
+                                    val selectedHighlightColor = viewModel.highlightColors.firstOrNull { it.selected }
+                                    putExtra("selectedHighlightColor", selectedHighlightColor?.colorCode?: "DBEBF7")
+                                }
                             )
                         }
                     )

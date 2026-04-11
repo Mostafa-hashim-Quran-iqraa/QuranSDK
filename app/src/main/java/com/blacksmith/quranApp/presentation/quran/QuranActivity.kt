@@ -11,7 +11,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.toColorInt
 import com.blacksmith.quranApp.presentation.base.BaseActivity
 import com.blacksmith.quranApp.presentation.base.theme.WhiteSmoke
 import com.blacksmith.quranApp.presentation.base.theme.krema
@@ -24,6 +26,21 @@ class QuranActivity :
 
     @Composable
     override fun DoCreate() {
+        viewModel.pageToOpen = intent.getIntExtra("pageToOpen", 0)
+        viewModel.isOnlyWordHighlight = intent.getBooleanExtra("isOnlyWordHighlight", false)
+        viewModel.isEnableJuzClick = intent.getBooleanExtra("isEnableJuzClick", false)
+        viewModel.isEnableSuraClick = intent.getBooleanExtra("isEnableSuraClick", false)
+        //bg color
+        viewModel.bgColor = intent.getStringExtra("selectedBGColor")?: "FDF8F2"
+        //font color
+        viewModel.fontColor = intent.getStringExtra("selectedFontColor")?: "000000"
+        //sura header
+        viewModel.surahHeaderColor = intent.getStringExtra("selectedSurahHeaderColor")?: "000000"
+        //sura title color
+        viewModel.surahTitleColor = intent.getStringExtra("selectedSurahTitleColor")?: "000000"
+        //highlight color
+        viewModel.highlightColor = intent.getStringExtra("selectedHighlightColor")?: "DBEBF7"
+
         Scaffold(
             modifier = Modifier
                 .systemBarsPadding()
@@ -32,9 +49,9 @@ class QuranActivity :
         ) {
             it
             Surface(
-                modifier = Modifier.Companion
+                modifier = Modifier
                     .fillMaxWidth()
-                    .background(color = krema)
+                    .background(color = Color(viewModel.bgColor.toColorInt()))
                 //remove padding if we hide bottomBar or appbar,
                 // to remove its background in all screens that not contains bottomBar
             ) {

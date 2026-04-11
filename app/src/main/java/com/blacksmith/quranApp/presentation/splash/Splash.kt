@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -76,8 +77,9 @@ fun Content(context: Context = LocalContext.current, viewModel: SplashViewModel)
                 painter = painterResource(id = R.mipmap.ic_launcher),
                 contentDescription = stringResource(id = R.string.app_name),
                 modifier = Modifier.width(200.toDP)
-                    .height(250.toDP),
+                    .height(200.toDP),
             )
+            Spacer(modifier = Modifier.height(20.toDP))
             LoaderLottie(R.raw.loader_circle, brown, 40, 40)
         }
     }

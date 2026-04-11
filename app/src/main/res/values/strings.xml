@@ -4,4 +4,9 @@
     <string name="try_again">Try Again</string>
     <string name="quran">Quran</string>
     <string name="open_quran_page">Open Quran Page</string>
+    <string name="page_background_color">Page Background color</string>
+    <string name="font_color">Font Color</string>
+    <string name="sura_header_color">Sura Header Color</string>
+    <string name="sura_title_color">Sura Title Color</string>
+    <string name="highlight_color">Highlight Color</string>
 </resources>

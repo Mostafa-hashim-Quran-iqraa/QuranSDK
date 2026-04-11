@@ -78,6 +78,7 @@ fun QuranPageScreen(
     pageBackground: Color = White,
     fontColor: Color = Black,
     suraHeaderColor: Color = GreenDark,
+    suraNameColor: Color = GreenDark,
     highlightColor: Color = colorPrimaryMoreLight,
 ) {
     val context = LocalContext.current
@@ -112,7 +113,13 @@ fun QuranPageScreen(
         context = context,
         pagerState = pagerState,
         coroutineScope = coroutineScope,
-        viewModel = viewModel
+        viewModel = viewModel,
+        isReversePager = isReversePager,
+        pageBackground = pageBackground,
+        fontColor = fontColor,
+        suraHeaderColor = suraHeaderColor,
+        suraNameColor = suraNameColor,
+        highlightColor = highlightColor
     )
 }
 
@@ -124,10 +131,12 @@ fun Content(
     pagerState: PagerState,
     coroutineScope: CoroutineScope,
     viewModel: QuranViewModel,
-    isReversePager: Boolean = false,
-    pageBackground: Color = White,
-    fontColor: Color = Black,
-    suraHeaderColor: Color = GreenDark,
+    isReversePager: Boolean,
+    pageBackground: Color ,
+    fontColor: Color ,
+    suraHeaderColor: Color,
+    suraNameColor: Color,
+    highlightColor: Color ,
 ) {
     Surface(
         color = pageBackground, modifier = Modifier.fillMaxSize()
@@ -214,6 +223,8 @@ fun Content(
                                     currentPage,
                                     fontColor = fontColor,
                                     suraHeaderColor = suraHeaderColor,
+                                    suraNameColor = suraNameColor,
+                                    highlightColor = highlightColor,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .weight(1f)
@@ -238,9 +249,10 @@ fun Content(
 @Composable
 fun Page(
     context: Context, viewModel: QuranViewModel, currentPage: Int,
-    fontColor: Color = Black,
-    suraHeaderColor: Color = GreenDark,
-    highlightColor: Color = colorPrimaryMoreLight,
+    fontColor: Color,
+    suraHeaderColor: Color,
+    suraNameColor: Color,
+    highlightColor: Color ,
     modifier: Modifier
 ) {
 //    val clipboard = LocalClipboard.current
@@ -284,7 +296,7 @@ fun Page(
                             colorFilter = ColorFilter.tint(suraHeaderColor)
                         )
                         Text(
-                            color = Black,
+                            color = suraNameColor,
                             text = line.surahLigature,
                             fontFamily = surah_name_v2,
                             fontSize = 30.toSP,

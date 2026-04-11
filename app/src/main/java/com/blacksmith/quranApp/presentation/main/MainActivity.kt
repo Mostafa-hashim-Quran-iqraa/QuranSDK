@@ -15,7 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.blacksmith.quranApp.presentation.base.BaseActivity
 import com.blacksmith.quranApp.presentation.base.theme.WhiteSmoke
 
-class MainActivity : BaseActivity(isWhiteActionBar = false, isFullScreen = false, noLimitScreen = false)  {
+class MainActivity : BaseActivity(isWhiteActionBar = true, isFullScreen = false, noLimitScreen = false)  {
     private val viewModel: MainViewModel by viewModels()
 
     @Composable

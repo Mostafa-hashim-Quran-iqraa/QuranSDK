@@ -36,10 +36,12 @@ import com.blacksmith.quranlib.data.util.component.ComposableLifecycle
 import com.blacksmith.quranlib.data.util.helper.toDP
 import com.blacksmith.quranApp.data.util.component.LoaderLottie
 import com.blacksmith.quranApp.presentation.base.theme.Black
+import com.blacksmith.quranApp.presentation.base.theme.colorPrimary
 import com.blacksmith.quranApp.presentation.base.theme.colorPrimaryDark
 import com.blacksmith.quranApp.presentation.base.theme.colorPrimaryMoreLight
 import com.blacksmith.quranApp.presentation.base.theme.gray_400
 import com.blacksmith.quranApp.presentation.base.theme.krema
+import com.blacksmith.quranApp.presentation.base.theme.red_light
 import com.blacksmith.quranApp.presentation.main.MainViewModel
 import com.blacksmith.quranlib.data.util.helper.toSP
 import com.blacksmith.quranlib.presentation.quranScreen.QuranPageScreen
@@ -56,7 +58,6 @@ fun QuranScreen(
             }
 
             Lifecycle.Event.ON_START -> {
-                viewModel.init()
             }
 
             Lifecycle.Event.ON_RESUME -> {
@@ -83,7 +84,7 @@ fun QuranScreen(
 fun Content(context: Context = LocalContext.current, viewModel: QuranViewModel) {
     val context = LocalContext.current
     Surface(
-        color = White, modifier = Modifier.fillMaxSize()
+        color = krema, modifier = Modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier
@@ -93,7 +94,9 @@ fun Content(context: Context = LocalContext.current, viewModel: QuranViewModel) 
             verticalArrangement = Arrangement.Center,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.toDP),
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             )
@@ -110,7 +113,8 @@ fun Content(context: Context = LocalContext.current, viewModel: QuranViewModel) 
                                 (context as QuranActivity).finish()
                             }
                         )
-                        .padding(10.toDP),
+                        .padding(7.toDP),
+                    tint = Black,
                     imageVector = Icons.Filled.ArrowBackIosNew,
                     contentDescription = "",
                 )
@@ -124,8 +128,9 @@ fun Content(context: Context = LocalContext.current, viewModel: QuranViewModel) 
 
             QuranPageScreen(
                 isReversePager = !viewModel.isArabicLocale(),
-                fontColor = Black,
-                suraHeaderColor = colorPrimaryDark,
+                fontColor = red_light,
+                suraHeaderColor = colorPrimary,
+                suraNameColor = colorPrimary,
                 highlightColor = colorPrimaryMoreLight,
                 pageBackground = krema
             )

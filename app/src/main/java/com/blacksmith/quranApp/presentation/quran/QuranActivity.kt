@@ -14,11 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.blacksmith.quranApp.presentation.base.BaseActivity
 import com.blacksmith.quranApp.presentation.base.theme.WhiteSmoke
+import com.blacksmith.quranApp.presentation.base.theme.krema
 import com.blacksmith.quranApp.presentation.main.MainHomeScreen
 import com.blacksmith.quranApp.presentation.main.MainViewModel
 
 class QuranActivity :
-    BaseActivity(isWhiteActionBar = false, isFullScreen = true, noLimitScreen = true) {
+    BaseActivity(isWhiteActionBar = true, isFullScreen = false, noLimitScreen = false) {
     private val viewModel: QuranViewModel by viewModels()
 
     @Composable
@@ -33,7 +34,7 @@ class QuranActivity :
             Surface(
                 modifier = Modifier.Companion
                     .fillMaxWidth()
-                    .background(color = WhiteSmoke)
+                    .background(color = krema)
                 //remove padding if we hide bottomBar or appbar,
                 // to remove its background in all screens that not contains bottomBar
             ) {

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="error">Error</string>
-    <string name="try_again">Try Again</string>
-    <string name="quran">Quran</string>
-    <string name="open_quran_page">Open Quran Page</string>
+    <string name="error">خطأ</string>
+    <string name="try_again">حاول مرة أخرى</string>
+    <string name="quran">المصحف</string>
+    <string name="open_quran_page">فتح صفحة المصحف</string>
+    <string name="page_background_color">لون خلفية الصفحة</string>
+    <string name="font_color">لون الخط</string>
+    <string name="sura_header_color">لون برواز السورة</string>
+    <string name="sura_title_color">لون اسم السورة</string>
+    <string name="highlight_color">لون تحديد الآيات</string>
 </resources>

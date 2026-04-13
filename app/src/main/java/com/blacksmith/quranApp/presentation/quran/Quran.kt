@@ -1,7 +1,6 @@
 package com.blacksmith.quranApp.presentation.quran
 
 import android.content.Context
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -13,10 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,26 +23,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.Lifecycle
 import com.blacksmith.quranApp.R
-import com.blacksmith.quranApp.presentation.base.theme.White
 import com.blacksmith.quranlib.data.util.component.ComposableLifecycle
 import com.blacksmith.quranlib.data.util.helper.toDP
-import com.blacksmith.quranApp.data.util.component.LoaderLottie
-import com.blacksmith.quranApp.presentation.base.theme.Black
-import com.blacksmith.quranApp.presentation.base.theme.colorPrimary
-import com.blacksmith.quranApp.presentation.base.theme.colorPrimaryDark
-import com.blacksmith.quranApp.presentation.base.theme.colorPrimaryMoreLight
 import com.blacksmith.quranApp.presentation.base.theme.gray_400
-import com.blacksmith.quranApp.presentation.base.theme.krema
-import com.blacksmith.quranApp.presentation.base.theme.red_light
-import com.blacksmith.quranApp.presentation.main.MainViewModel
 import com.blacksmith.quranlib.data.util.helper.toSP
 import com.blacksmith.quranlib.presentation.quranScreen.QuranPageScreen
 
@@ -136,6 +122,15 @@ fun Content(context: Context = LocalContext.current, viewModel: QuranViewModel) 
                 suraNameColor = Color(viewModel.surahTitleColor.toColorInt()),
                 highlightColor = Color(viewModel.highlightColor.toColorInt()),
                 pageBackground = Color(viewModel.bgColor.toColorInt()),
+                isAyaHighlight = viewModel.isAyaHighlight,
+                isSurahClickable = viewModel.isEnableSuraClick,
+                isFontBold = viewModel.isBoldFont,
+                pageToOpen = viewModel.pageToOpen,
+                isJuzClickable = viewModel.isEnableJuzClick,
+                onClickJuzName = { chapterModel ->
+                },
+                onClickSurahName = { surahModel ->
+                }
             )
         }
     }

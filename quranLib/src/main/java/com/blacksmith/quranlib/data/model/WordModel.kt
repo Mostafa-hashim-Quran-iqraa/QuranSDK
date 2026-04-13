@@ -1,5 +1,8 @@
 package com.blacksmith.quranlib.data.model
 
+import androidx.compose.runtime.Stable
+
+@Stable
 data class WordModel(
     val id: Int,
     val text: String,        // من words

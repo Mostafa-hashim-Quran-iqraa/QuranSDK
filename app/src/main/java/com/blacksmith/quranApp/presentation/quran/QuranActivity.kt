@@ -8,17 +8,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.graphics.toColorInt
 import com.blacksmith.quranApp.presentation.base.BaseActivity
-import com.blacksmith.quranApp.presentation.base.theme.WhiteSmoke
-import com.blacksmith.quranApp.presentation.base.theme.krema
-import com.blacksmith.quranApp.presentation.main.MainHomeScreen
-import com.blacksmith.quranApp.presentation.main.MainViewModel
 
 class QuranActivity :
     BaseActivity(isWhiteActionBar = true, isFullScreen = false, noLimitScreen = false) {
@@ -27,9 +21,10 @@ class QuranActivity :
     @Composable
     override fun DoCreate() {
         viewModel.pageToOpen = intent.getIntExtra("pageToOpen", 0)
-        viewModel.isOnlyWordHighlight = intent.getBooleanExtra("isOnlyWordHighlight", false)
+        viewModel.isAyaHighlight = intent.getBooleanExtra("isAyaHighlight", false)
         viewModel.isEnableJuzClick = intent.getBooleanExtra("isEnableJuzClick", false)
         viewModel.isEnableSuraClick = intent.getBooleanExtra("isEnableSuraClick", false)
+        viewModel.isBoldFont = intent.getBooleanExtra("isBoldFont", true)
         //bg color
         viewModel.bgColor = intent.getStringExtra("selectedBGColor")?: "FDF8F2"
         //font color

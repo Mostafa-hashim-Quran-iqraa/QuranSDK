@@ -9,4 +9,15 @@
     <string name="sura_header_color">Sura Header Color</string>
     <string name="sura_title_color">Sura Title Color</string>
     <string name="highlight_color">Highlight Color</string>
+    <string name="highlight_word_or_aya">Highlight word or aya</string>
+    <string name="highlight_aya">Highlight Aya</string>
+    <string name="highlight_word">Highlight Word</string>
+    <string name="click_on_juz_and_sura_names">Click on Juz and Sura Names</string>
+    <string name="juz_clickable">Juz Clickable</string>
+    <string name="sura_clickable">Sura Clickable</string>
+    <string name="font_weight">Font Weight</string>
+    <string name="bold">Bold</string>
+    <string name="normal">Normal</string>
+    <string name="regular">Regular</string>
+    <string name="page_number">Page Number</string>
 </resources>

@@ -9,4 +9,15 @@
     <string name="sura_header_color">لون برواز السورة</string>
     <string name="sura_title_color">لون اسم السورة</string>
     <string name="highlight_color">لون تحديد الآيات</string>
+    <string name="highlight_word_or_aya">التحديد بالكلمة أو بالآية</string>
+    <string name="highlight_aya">التحديد بالآية</string>
+    <string name="highlight_word">التحديد بالكلمة</string>
+    <string name="click_on_juz_and_sura_names">الضغط على اسم الجزء والسورة</string>
+    <string name="juz_clickable">الجزء قابل للنقر</string>
+    <string name="sura_clickable">السورة قابلة للنقر</string>
+    <string name="font_weight">سمك الخط</string>
+    <string name="bold">سميك</string>
+    <string name="normal">عادي</string>
+    <string name="regular">عادي</string>
+    <string name="page_number">رقم الصفحة</string>
 </resources>

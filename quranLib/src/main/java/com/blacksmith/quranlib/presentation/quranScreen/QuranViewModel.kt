@@ -29,7 +29,8 @@ import javax.inject.Inject
 @HiltViewModel
 class QuranViewModel @Inject constructor(
     var quranRepository: QuranRepository,
-) : ViewModel() {
+) : ViewModel()
+{
     var isDataLoaded by mutableStateOf(false)
         private set
     var isShowLoader by mutableStateOf(true)
@@ -39,9 +40,10 @@ class QuranViewModel @Inject constructor(
     var quranPageModels = mutableStateListOf<QuranPageModel>()
         private set
     private val _fontCache = mutableStateMapOf<String, FontFamily?>()
-    val fontCache: Map<String, FontFamily?> get() = _fontCache
 
     init {
+        quranPageModels.clear()
+        _fontCache.clear()
     }
 
 
@@ -96,13 +98,15 @@ class QuranViewModel @Inject constructor(
         return "QCF2${pageText}.ttf"
     }
 
-    fun getData(context: Context) {
+    fun getData(context: Context,) {
         viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 isShowLoader = true
                 isShowError = false
                 isDataLoaded = false
             }
+            quranPageModels.clear()
+            _fontCache.clear()
 
             val quranDeferred = async { quranRepository.getQuranData(context) }
             val pagesDeferred = async { quranRepository.getPages() }

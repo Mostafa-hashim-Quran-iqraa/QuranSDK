@@ -33,7 +33,7 @@ import com.blacksmith.quranlib.data.util.component.ComposableLifecycle
 import com.blacksmith.quranlib.data.util.helper.toDP
 import com.blacksmith.quranApp.presentation.base.theme.gray_400
 import com.blacksmith.quranlib.data.util.helper.toSP
-import com.blacksmith.quranlib.presentation.quranScreen.QuranPageScreen
+import com.blacksmith.quranlib.presentation.newQuranScreen.QuranPageScreen
 
 @Composable
 fun QuranScreen(

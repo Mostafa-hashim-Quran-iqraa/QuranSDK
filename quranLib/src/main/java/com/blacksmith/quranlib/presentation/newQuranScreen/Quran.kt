@@ -295,7 +295,7 @@ private fun QuranPageItem(
     val basmalaBitmap = viewModel.getBitmap(context, R.drawable.basmala)
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.padding(horizontal = 10.dp).fillMaxSize(),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -330,11 +330,13 @@ private fun QuranPageItem(
             suraHeaderBitmap != null && basmalaBitmap != null
         ) {
             val textSizePx = with(density) { 20.dp.toPx() }
+            val horizontalPaddingPx = with(density) { 10.dp.toPx() }
             CanvasQuranPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(horizontal = 10.dp),
+                horizontalPaddingPx = horizontalPaddingPx,
                 context = context,
                 pageModel = pageModel,
                 typeface = typeface,
@@ -372,6 +374,7 @@ private fun QuranPageItem(
 @Composable
 private fun CanvasQuranPage(
     modifier: Modifier,
+    horizontalPaddingPx: Float,
     context: Context,
     pageModel: QuranPageModel,
     typeface: Typeface,
@@ -456,6 +459,7 @@ private fun CanvasQuranPage(
             wordRects.clear()
             drawPageContent(
                 scope = this,
+                horizontalPaddingPx = horizontalPaddingPx,
                 pageModel = pageModel,
                 textPaint = textPaint,
                 typefaceSuraName = typefaceSuraName,
@@ -518,6 +522,7 @@ private fun CanvasQuranPage(
 // =============================================================================
 private fun drawPageContent(
     scope: DrawScope,
+    horizontalPaddingPx: Float,
     pageModel: QuranPageModel,
     textPaint: Paint,
     typefaceSuraName: Typeface,
@@ -557,13 +562,14 @@ private fun drawPageContent(
             when (line.line_type) {
 
                 LineModel.LINE_TYPE_SURAH_NAME -> {
-                    val hPad = canvasWidth * 0.02f
-                    val destRect = RectF(
-                        hPad,
-                        lineTop + lineHeight * 0.05f,
-                        canvasWidth - hPad,
-                        lineTop + lineHeight * 0.95f,
-                    )
+                    // نمد الهيدر خارج الـ canvas بمقدار الـ padding الأفقي من كل جهة
+                    // عشان يبدأ وينتهي مع حواف الشاشة مش مع حواف الـ canvas
+                    val bitmapRatio = suraHeaderBitmap.width.toFloat() / suraHeaderBitmap.height
+                    val drawW = canvasWidth + horizontalPaddingPx * 2f
+                    val drawH = drawW / bitmapRatio
+                    val drawLeft = -horizontalPaddingPx
+                    val drawTop = lineTop + (lineHeight - drawH) / 2f
+                    val destRect = RectF(drawLeft, drawTop, drawLeft + drawW, drawTop + drawH)
                     bitmapPaint.colorFilter = PorterDuffColorFilter(
                         suraHeaderColor.toArgb(), PorterDuff.Mode.SRC_IN,
                     )

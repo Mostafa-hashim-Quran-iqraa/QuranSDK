@@ -626,16 +626,19 @@ private fun drawPageContent(
                     val wordMetrics = Array(words.size) { i ->
                         val bounds = android.graphics.Rect()
                         textPaint.getTextBounds(words[i].text, 0, words[i].text.length, bounds)
-                        // العرض البصري الحقيقي = bounds.right - bounds.left
-                        // ده بياخد في الاعتبار الـ negative left bearing زي word=2 في البسملة
-                        // اللي عنده bounds.left=-119 يعني الـ ink بيطلع 119px لشمال نقطة الرسم
-                        val inkWidth = (bounds.right - bounds.left).toFloat()
                         val advance = measureWordWidth(textPaint, words[i].text)
-                        val visualWidth = inkWidth.coerceAtLeast(advance)
-                        // leftBearing: المسافة اللي الـ glyph بيطلع فيها لشمال نقطة الرسم
-                        // لو سالب معناه الـ ink بيبدأ قبل الـ drawX
-                        val leftBearing = bounds.left.toFloat()
-                        Pair(visualWidth, leftBearing)
+                        val boundsRight = bounds.right.toFloat()
+                        // نستخدم bounds.right بس لو أكبر من advance بنسبة معقولة (< 4x)
+                        // لو bounds.right أكبر بكتير (زي advance=8, bounds.right=264)
+                        // ده glyph من النوع اللي بيتراكب عمداً — نستخدم bounds.right
+                        // لو bounds.right أكبر بنسبة صغيرة أو أقل — نستخدم advance
+                        // الفرق الكبير (> 3x) هو علامة الـ zero-width overlapping glyph
+                        val visualWidth = if (boundsRight > advance * 3f) {
+                            boundsRight
+                        } else {
+                            advance.coerceAtLeast(boundsRight)
+                        }
+                        Pair(visualWidth, 0f)
                     }
 
                     // العرض البصري الكلي للسطر (بدون gaps)
@@ -697,13 +700,12 @@ private fun drawPageContent(
                     words.forEachIndexed { i, word ->
                         val x = xPositions[i]
                         val vw = wordMetrics[i].first
-                        // drawX: نقطة رسم الكلمة في الـ canvas
-                        // الـ position x هو الـ left edge البصري للكلمة (بداية الـ ink)
-                        // لو leftBearing سالب، نقطة رسم الفونت = x - leftBearing
-                        // مثال: x=500, leftBearing=-119 → drawX=619
-                        // يعني الفونت بيبدأ من 619 لكن الـ ink بيظهر من 500
-                        val drawX = x - wordMetrics[i].second
-                        nativeCanvas.drawText(word.text, drawX, baseline, textPaint)
+                        // drawX = x مباشرة بدون تعديل
+                        // الـ negative left bearing في الفونت القرآني مقصود —
+                        // الكلمة بتتراكب على اللي قبلها عشان تبان متصلة.
+                        // إحنا بنستخدم inkWidth بس في حساب الـ layout (positions)
+                        // عشان نحجز المساحة الصح، لكن نقطة الرسم تفضل كما هي.
+                        nativeCanvas.drawText(word.text, x, baseline, textPaint)
 
                         // wordRects في screen space الحقيقي
                         val scaledLeft  = canvasWidth - (canvasWidth - x) * scaleX
@@ -770,11 +772,14 @@ private fun computeWordPositions(
     val metrics = Array(words.size) { i ->
         val bounds = android.graphics.Rect()
         textPaint.getTextBounds(words[i].text, 0, words[i].text.length, bounds)
-        val inkWidth = (bounds.right - bounds.left).toFloat()
         val advance = measureWordWidth(textPaint, words[i].text)
-        val visualWidth = inkWidth.coerceAtLeast(advance)
-        val leftBearing = bounds.left.toFloat()
-        Pair(visualWidth, leftBearing)
+        val boundsRight = bounds.right.toFloat()
+        val visualWidth = if (boundsRight > advance * 3f) {
+            boundsRight
+        } else {
+            advance.coerceAtLeast(boundsRight)
+        }
+        Pair(visualWidth, 0f)
     }
     return computeWordPositions(canvasWidth, line, textPaint, metrics)
 }

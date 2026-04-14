@@ -35,6 +35,8 @@ class QuranActivity :
         viewModel.surahTitleColor = intent.getStringExtra("selectedSurahTitleColor")?: "000000"
         //highlight color
         viewModel.highlightColor = intent.getStringExtra("selectedHighlightColor")?: "DBEBF7"
+        //ayah number color
+        viewModel.ayahNumberColor = intent.getStringExtra("selectedAyahNumberColor")?: "000000"
 
         Scaffold(
             modifier = Modifier

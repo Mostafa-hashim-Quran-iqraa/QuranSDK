@@ -19,6 +19,7 @@ open class MainViewModel @Inject constructor(
     var surahTitleColors = mutableStateListOf<ColorModel>()
     var fontColors = mutableStateListOf<ColorModel>()
     var highlightColors = mutableStateListOf<ColorModel>()
+    var ayaNumberColors = mutableStateListOf<ColorModel>()
     var pageToOpen by mutableIntStateOf(1)
     var isAyaHighlight by mutableStateOf(true)
     var isEnableJuzClick by mutableStateOf(false)
@@ -31,6 +32,7 @@ open class MainViewModel @Inject constructor(
         initSurahTitleColorList()
         initFontColorList()
         initHighlightColorList()
+        ayaNumberColorList()
     }
 
     fun initBGColorList() {
@@ -42,6 +44,7 @@ open class MainViewModel @Inject constructor(
         bgColors.add(ColorModel(colorCode = "#FA050F"))
         bgColors.add(ColorModel(colorCode = "#FDF8F2"))
         bgColors.add(ColorModel(colorCode = "#000000"))
+        bgColors.add(ColorModel(colorCode = "#14352A"))
     }
 
     fun selectOnlyBGColor(position: Int) {
@@ -59,6 +62,7 @@ open class MainViewModel @Inject constructor(
         surahHeaderColors.add(ColorModel(colorCode = "#FA050F"))
         surahHeaderColors.add(ColorModel(colorCode = "#FDF8F2"))
         surahHeaderColors.add(ColorModel(colorCode = "#FFFFFF"))
+        surahHeaderColors.add(ColorModel(colorCode = "#14352A"))
 
     }
 
@@ -77,6 +81,7 @@ open class MainViewModel @Inject constructor(
         surahTitleColors.add(ColorModel(colorCode = "#FDF8F2"))
         surahTitleColors.add(ColorModel(colorCode = "#FFFFFF"))
         surahTitleColors.add(ColorModel(colorCode = "#000000"))
+        surahTitleColors.add(ColorModel(colorCode = "#14352A"))
     }
 
     fun selectOnlySurahTitleColor(position: Int) {
@@ -94,6 +99,7 @@ open class MainViewModel @Inject constructor(
         fontColors.add(ColorModel(colorCode = "#FA050F"))
         fontColors.add(ColorModel(colorCode = "#FDF8F2"))
         fontColors.add(ColorModel(colorCode = "#FFFFFF"))
+        fontColors.add(ColorModel(colorCode = "#14352A"))
 
     }
 
@@ -112,11 +118,30 @@ open class MainViewModel @Inject constructor(
         highlightColors.add(ColorModel(colorCode = "#55FDF8F2"))
         highlightColors.add(ColorModel(colorCode = "#55FFFF00"))
         highlightColors.add(ColorModel(colorCode = "#55000000"))
+        highlightColors.add(ColorModel(colorCode = "#14352A"))
+    }
+
+    fun ayaNumberColorList() {
+        ayaNumberColors.clear()
+        ayaNumberColors.add(ColorModel(colorCode = "#000000",true))
+        ayaNumberColors.add(ColorModel(colorCode = "#AF8F6E", ))
+        ayaNumberColors.add(ColorModel(colorCode = "#0073C9"))
+        ayaNumberColors.add(ColorModel(colorCode = "#1BF802"))
+        ayaNumberColors.add(ColorModel(colorCode = "#FA050F"))
+        ayaNumberColors.add(ColorModel(colorCode = "#FDF8F2"))
+        ayaNumberColors.add(ColorModel(colorCode = "#FFFFFF"))
+        ayaNumberColors.add(ColorModel(colorCode = "#14352A"))
     }
 
     fun selectOnlyHighlightColor(position: Int) {
         for (i in highlightColors.indices) {
             highlightColors[i] = highlightColors[i].copy(selected = i == position)
+        }
+    }
+
+    fun selectOnlyAyaNumberColor(position: Int) {
+        for (i in ayaNumberColors.indices) {
+            ayaNumberColors[i] = ayaNumberColors[i].copy(selected = i == position)
         }
     }
 

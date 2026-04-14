@@ -121,6 +121,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
+import com.blacksmith.quranlib.presentation.theme.red_light
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -141,6 +142,7 @@ fun QuranPageScreen(
     suraHeaderColor: Color = GreenDark,
     suraNameColor: Color = GreenDark,
     highlightColor: Color = colorPrimaryMoreLight,
+    ayahNumberColor: Color = red_light,
     isAyaHighlight: Boolean = false,
     isSurahClickable: Boolean = false,
     isJuzClickable: Boolean = false,
@@ -174,6 +176,7 @@ fun QuranPageScreen(
         suraHeaderColor = suraHeaderColor,
         suraNameColor = suraNameColor,
         highlightColor = highlightColor,
+        ayahNumberColor = ayahNumberColor,
         isAyaHighlight = isAyaHighlight,
         isSurahClickable = isSurahClickable,
         isJuzClickable = isJuzClickable,
@@ -197,6 +200,7 @@ private fun QuranContent(
     suraHeaderColor: Color,
     suraNameColor: Color,
     highlightColor: Color,
+    ayahNumberColor: Color,
     isAyaHighlight: Boolean,
     isSurahClickable: Boolean,
     isJuzClickable: Boolean,
@@ -246,6 +250,7 @@ private fun QuranContent(
                                     suraHeaderColor = suraHeaderColor,
                                     suraNameColor = suraNameColor,
                                     highlightColor = highlightColor,
+                                    ayahNumberColor = ayahNumberColor,
                                     isAyaHighlight = isAyaHighlight,
                                     isSurahClickable = isSurahClickable,
                                     isJuzClickable = isJuzClickable,
@@ -276,6 +281,7 @@ private fun QuranPageItem(
     suraHeaderColor: Color,
     suraNameColor: Color,
     highlightColor: Color,
+    ayahNumberColor: Color,
     isAyaHighlight: Boolean,
     isSurahClickable: Boolean,
     isJuzClickable: Boolean,
@@ -295,7 +301,7 @@ private fun QuranPageItem(
     val basmalaBitmap = viewModel.getBitmap(context, R.drawable.basmala)
 
     Column(
-        modifier = Modifier.padding(horizontal = 10.dp).fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -346,6 +352,7 @@ private fun QuranPageItem(
                 textSizePx = textSizePx,
                 fontColorArgb = fontColor.toArgb(),
                 highlightColorArgb = highlightColor.toArgb(),
+                ayahNumberColorArgb = ayahNumberColor.toArgb(),
                 suraHeaderColor = suraHeaderColor,
                 suraNameColor = suraNameColor,
                 isBold = isFontBold,
@@ -384,6 +391,7 @@ private fun CanvasQuranPage(
     textSizePx: Float,
     fontColorArgb: Int,
     highlightColorArgb: Int,
+    ayahNumberColorArgb: Int,
     suraHeaderColor: Color,
     suraNameColor: Color,
     isBold: Boolean,
@@ -468,6 +476,7 @@ private fun CanvasQuranPage(
                 textSizePx = textSizePx,
                 fontColorArgb = fontColorArgb,
                 highlightColorArgb = highlightColorArgb,
+                ayahNumberColorArgb = ayahNumberColorArgb,
                 suraHeaderColor = suraHeaderColor,
                 suraNameColor = suraNameColor,
                 selectedWord = selectedWord,
@@ -531,6 +540,7 @@ private fun drawPageContent(
     textSizePx: Float,
     fontColorArgb: Int,
     highlightColorArgb: Int,
+    ayahNumberColorArgb: Int,
     suraHeaderColor: Color,
     suraNameColor: Color,
     selectedWord: WordModel?,
@@ -706,12 +716,12 @@ private fun drawPageContent(
                     words.forEachIndexed { i, word ->
                         val x = xPositions[i]
                         val vw = wordMetrics[i].first
-                        // drawX = x مباشرة بدون تعديل
-                        // الـ negative left bearing في الفونت القرآني مقصود —
-                        // الكلمة بتتراكب على اللي قبلها عشان تبان متصلة.
-                        // إحنا بنستخدم inkWidth بس في حساب الـ layout (positions)
-                        // عشان نحجز المساحة الصح، لكن نقطة الرسم تفضل كما هي.
+                        // لو الكلمة رقم آية (كل حروفها أرقام عربية) نغير لونها
+                        val isAyahNum = word.wordText.isNotEmpty() &&
+                                word.wordText.all { it in '٠'..'٩' }
+                        if (isAyahNum) textPaint.color = ayahNumberColorArgb
                         nativeCanvas.drawText(word.text, x, baseline, textPaint)
+                        if (isAyahNum) textPaint.color = fontColorArgb
 
                         // wordRects في screen space الحقيقي
                         val scaledLeft  = canvasWidth - (canvasWidth - x) * scaleX
@@ -837,3 +847,6 @@ fun measureWordWidth(textPaint: Paint, text: String): Float {
 
 fun Int.dpToPx(context: Context): Float =
     this * context.resources.displayMetrics.density
+
+private fun String.isAyahNumber(): Boolean =
+    isNotEmpty() && all { it in '٠'..'٩' }

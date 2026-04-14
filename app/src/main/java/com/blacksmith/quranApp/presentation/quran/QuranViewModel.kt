@@ -23,6 +23,8 @@ open class QuranViewModel @Inject constructor(
     var surahTitleColor by mutableStateOf("")
     var highlightColor by mutableStateOf("")
 
+    var ayahNumberColor by mutableStateOf("")
+
 
     fun onDispose() {
     }

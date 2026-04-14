@@ -310,6 +310,60 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
 
             }
 
+            //aya number color
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.toDP),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Center,
+            )
+            {
+                Text(
+                    text = stringResource(R.string.aya_number_color),
+                    fontSize = 14.toSP,
+                    color = colorPrimary,
+                    fontFamily = fontNeoSansArabicRegular600
+                )
+
+                LazyRow(
+                    modifier = Modifier.padding(top = 5.toDP),
+                    horizontalArrangement = Arrangement.spacedBy(10.toDP),
+                ) {
+                    items(count = viewModel.ayaNumberColors.size) { pos ->
+                        Box(
+                            modifier = Modifier
+                                .padding(0.toDP)
+                                .size(40.toDP)
+                                .clip(RoundedCornerShape(8.toDP))
+                                .border(
+                                    width = if (viewModel.ayaNumberColors[pos].selected) 2.toDP else 1.toDP,
+                                    color = if (viewModel.ayaNumberColors[pos].selected) colorPrimary else gray_200,
+                                    shape = RoundedCornerShape(8.toDP)
+                                )
+                                .clickable(
+                                    onClick = {
+                                        viewModel.selectOnlyAyaNumberColor(pos)
+                                    }
+                                )
+                                .background(transparent)
+                                .padding(4.toDP),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(8.toDP))
+                                    .background(
+                                        Color(viewModel.ayaNumberColors[pos].colorCode.toColorInt())
+                                    )
+                            )
+                        }
+                    }
+                }
+
+            }
+
             //highlight color
             Column(
                 modifier = Modifier
@@ -691,6 +745,13 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                                     putExtra(
                                         "selectedSurahTitleColor",
                                         selectedSurahTitleColor?.colorCode ?: "000000"
+                                    )
+                                    //aya number color
+                                    val selectedAyaNumberColor =
+                                        viewModel.ayaNumberColors.firstOrNull { it.selected }
+                                    putExtra(
+                                        "selectedAyahNumberColor",
+                                        selectedAyaNumberColor?.colorCode ?: "000000"
                                     )
                                     //highlight color
                                     val selectedHighlightColor =

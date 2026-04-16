@@ -429,7 +429,7 @@ private fun CanvasQuranPage(
         }
     }
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()

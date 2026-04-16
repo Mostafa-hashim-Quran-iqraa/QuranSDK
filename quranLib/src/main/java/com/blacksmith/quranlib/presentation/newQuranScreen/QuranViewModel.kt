@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.os.Build
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -37,10 +39,8 @@ import androidx.core.graphics.createBitmap
 @HiltViewModel
 class QuranViewModel @Inject constructor(
     var quranRepository: QuranRepository,
-) : ViewModel()
-{
+) : ViewModel() {
 
-    // ─── UI state ────────────────────────────────────────────────────────────
     var isDataLoaded by mutableStateOf(false)
         private set
     var isShowLoader by mutableStateOf(true)
@@ -50,53 +50,59 @@ class QuranViewModel @Inject constructor(
     var quranPageModels = mutableStateListOf<QuranPageModel>()
         private set
 
-    // ─── Font cache (Typeface, NOT FontFamily — Canvas needs Typeface) ────────
-    // LinkedHashMap with access order = true → acts as LRU
     private val _typefaceCache = object : LinkedHashMap<String, Typeface>(
-        MAX_CACHED_FONTS + 1, 0.75f, true /* accessOrder */
+        MAX_CACHED_FONTS + 1, 0.75f, true
     ) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Typeface>): Boolean =
             size > MAX_CACHED_FONTS
     }
-    var typefaceSuraName : Typeface? = null
+    var typefaceSuraName: Typeface? = null
     private val bitmapCache = mutableMapOf<Int, Bitmap>()
-    private val _fontCacheLock = Any() // simple synchronization guard
+    private val _fontCacheLock = Any()
 
-    // Compose-observable map so that Canvas composables recompose when a font arrives
     var fontReadyState = mutableStateMapOf<Int, Boolean>()
         private set
 
-    // ─── Constants ───────────────────────────────────────────────────────────
+    private var _dataVersion = 0
+    private val _layoutComputedPages = mutableSetOf<String>()
+    private val _layoutLock = Any()
+
+    // Cache للـ glyph widths المقاسة بالـ bitmap — key = "fontKey|text|textSizeInt"
+    // Samsung بيكذب على كل الـ APIs (measureText, getTextBounds, getTextPath, getRunAdvance)
+    // بشكل عشوائي لبعض الـ PUA glyphs، فالحل الوحيد الموثوق هو عد الـ pixels.
+    private val _glyphWidthCache = mutableMapOf<String, Float>()
+    private val _glyphCacheLock = Any()
+
     companion object {
         val EMPTY_SURAH = SurahModel()
         val EMPTY_CHAPTER = ChapterModel()
         val EMPTY_AYA = AyaModel()
         const val TOTAL_PAGES = 604
-
-        /**
-         * Keep at most this many Typeface objects in memory.
-         * Each Typeface is roughly 200–400 KB → 30 × 300 KB ≈ 9 MB, safe for most devices.
-         * Increase only if you profile and confirm headroom.
-         */
         private const val MAX_CACHED_FONTS = 30
+        const val MUSHAF_LINES_PER_PAGE = 16
+
+        // Samsung S25 Ultra: textSize=75px
+        // أكبر كلمة طبيعية = 278px = 3.71×ts
+        // أصغر over-report مؤكد = 436px = 5.81×ts
+        // threshold = 4.5× يفصل بينهم بأمان
+        private const val UPPER_THRESHOLD_RATIO = 4.5f
+        private const val LOWER_THRESHOLD_RATIO = 0.4f
+
+        // حجم الـ bitmap المؤقت للقياس (بالـ textSize units)
+        private const val BITMAP_WIDTH_RATIO = 8
+        private const val BITMAP_HEIGHT_RATIO = 2
     }
 
     // ─── Font helpers ─────────────────────────────────────────────────────────
-
-    /** Returns the Typeface for [page] if already cached, null otherwise.
-     *  A background load is kicked off automatically when null is returned. */
     fun getTypefaceForPage(context: Context, page: Int): Typeface? {
         val key = fontFileNameForPage(page)
         val cached = synchronized(_fontCacheLock) { _typefaceCache[key] }
         if (cached != null) return cached
 
-        // Not cached — load in background and trigger recomposition when done
         viewModelScope.launch(Dispatchers.IO) {
             val typeface = loadTypefaceFromAssets(context, key)
             synchronized(_fontCacheLock) { _typefaceCache[key] = typeface }
-            withContext(Dispatchers.Main) {
-                fontReadyState[page] = true
-            }
+            withContext(Dispatchers.Main) { fontReadyState[page] = true }
         }
         return null
     }
@@ -110,40 +116,9 @@ class QuranViewModel @Inject constructor(
         return bitmap
     }
 
-    fun getBitmap(context: Context, @DrawableRes resId: Int): Bitmap {
-        return bitmapCache.getOrPut(resId) {
-            loadBitmap(context, resId)
-        }
-    }
+    fun getBitmap(context: Context, @DrawableRes resId: Int): Bitmap =
+        bitmapCache.getOrPut(resId) { loadBitmap(context, resId) }
 
-    /**
-     * Returns a [Paint] configured for Quran text on [page].
-     * The Paint is created fresh each call — callers should remember() it in Compose.
-     * Returns null if the font is not yet loaded (triggers background load).
-     */
-    fun buildPaintForPage(
-        context: Context,
-        page: Int,
-        textSizePx: Float,
-        colorArgb: Int,
-        isBold: Boolean = false,
-    ): Paint? {
-        val typeface = getTypefaceForPage(context, page) ?: return null
-        return Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.typeface = typeface
-            this.textSize = textSizePx
-            this.color = colorArgb
-            this.textAlign = Paint.Align.RIGHT // Quran text is RTL
-            if (isBold) {
-                // Simulate bold via shadow (same technique as original boldTextStyle)
-                setShadowLayer(0f, 0.9f, 0.9f, colorArgb)
-            }
-            isSubpixelText = true
-        }
-    }
-
-    /** Eagerly warm up fonts for pages [currentPage-range .. currentPage+range].
-     *  Uses a small concurrency window to avoid spawning 604 coroutines. */
     fun preloadFontsAround(context: Context, currentPage: Int, range: Int = 5) {
         val start = maxOf(1, currentPage - range)
         val end = minOf(TOTAL_PAGES, currentPage + range)
@@ -162,9 +137,8 @@ class QuranViewModel @Inject constructor(
     fun loadTypefaceFromAssets(context: Context, fontFileName: String): Typeface =
         Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
 
-    fun loadTypefaceFromRes(context: Context, fontResId: Int): Typeface? {
-        return ResourcesCompat.getFont(context, fontResId)
-    }
+    fun loadTypefaceFromRes(context: Context, fontResId: Int): Typeface? =
+        ResourcesCompat.getFont(context, fontResId)
 
     private fun fontFileNameForPage(page: Int): String {
         val p = page.toString().padStart(3, '0')
@@ -172,7 +146,6 @@ class QuranViewModel @Inject constructor(
     }
 
     // ─── Data loading ─────────────────────────────────────────────────────────
-
     fun getData(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
@@ -182,8 +155,13 @@ class QuranViewModel @Inject constructor(
             }
             quranPageModels.clear()
             synchronized(_fontCacheLock) { _typefaceCache.clear() }
+            synchronized(_layoutLock) {
+                _layoutComputedPages.clear()
+                _dataVersion++
+            }
+            synchronized(_glyphCacheLock) { _glyphWidthCache.clear() }
             fontReadyState.clear()
-            typefaceSuraName = loadTypefaceFromRes(context, R.font.surah_name_v2)
+            typefaceSuraName = loadTypefaceFromRes(context, R.font.surah_name_v4)
 
             try {
                 val quranDeferred = async { quranRepository.getQuranData(context) }
@@ -196,7 +174,6 @@ class QuranViewModel @Inject constructor(
                 val words = wordsDeferred.await()
                 val wordsText = wordsTextDeferred.await()
 
-                // Build lookup maps once
                 val wordsMap = words.associateBy { it.id }
                 val wordsTextMap = wordsText.associateBy { it.id }
                 val pagesGrouped = pages.groupBy { it.page_number }
@@ -219,14 +196,13 @@ class QuranViewModel @Inject constructor(
                             lineSurahModel = surahMap[line.surah_number] ?: EMPTY_SURAH
                             lineChapterModel = chapterMap[line.chapter_number] ?: EMPTY_CHAPTER
 
-                            val wordList =
-                                (line.first_word_id!!..line.last_word_id!!).mapNotNull { id ->
+                            val wordList = (line.first_word_id!!..line.last_word_id!!)
+                                .mapNotNull { id ->
                                     val word = wordsMap[id] ?: return@mapNotNull null
                                     val wordSurahModel = surahMap[word.surah] ?: EMPTY_SURAH
                                     val ayaModel = ayasMap[word.surah]?.get(word.ayah) ?: EMPTY_AYA
                                     val wordChapterModel =
                                         chapterMap[ayaModel.chapter_id] ?: EMPTY_CHAPTER
-
                                     WordModel(
                                         id = word.id,
                                         text = word.text ?: "",
@@ -237,7 +213,7 @@ class QuranViewModel @Inject constructor(
                                         chapterId = wordChapterModel.id?.toIntOrNull() ?: 0,
                                         chapterName = wordChapterModel.name_ar ?: "",
                                         ayah = word.ayah ?: 0,
-                                        word = word.word ?: 0
+                                        word = word.word ?: 0,
                                     )
                                 }
 
@@ -250,7 +226,7 @@ class QuranViewModel @Inject constructor(
                                 chapterId = lineChapterModel.id?.toIntOrNull() ?: 0,
                                 chapterName = lineChapterModel.name_ar ?: "",
                                 line_type = line.line_type,
-                                words = wordList
+                                words = wordList,
                             )
                         }
 
@@ -259,7 +235,7 @@ class QuranViewModel @Inject constructor(
                                 pageNumber = pageNumber,
                                 surahModel = lineSurahModel,
                                 lines = lineModels,
-                                chapterModel = lineChapterModel
+                                chapterModel = lineChapterModel,
                             )
                         )
                     }
@@ -272,7 +248,6 @@ class QuranViewModel @Inject constructor(
                     isDataLoaded = true
                 }
 
-                // Preload fonts for first few pages after data is ready (small range to avoid OOM)
                 preloadFontsAround(context, currentPage = 1, range = 5)
 
             } catch (e: Exception) {
@@ -287,7 +262,7 @@ class QuranViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         synchronized(_fontCacheLock) { _typefaceCache.clear() }
+        synchronized(_layoutLock) { _layoutComputedPages.clear() }
+        synchronized(_glyphCacheLock) { _glyphWidthCache.clear() }
     }
-
-
 }

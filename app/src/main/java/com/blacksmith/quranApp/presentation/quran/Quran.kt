@@ -115,7 +115,8 @@ fun Content(context: Context = LocalContext.current, viewModel: QuranViewModel) 
                 )
             }
 
-            QuranPageScreen(
+            com.blacksmith.quranlib.presentation.quranScreen.QuranPageScreen(
+//            QuranPageScreen(
                 isReversePager = !viewModel.isArabicLocale(),
                 fontColor = Color(viewModel.fontColor.toColorInt()),
                 suraHeaderColor = Color(viewModel.surahHeaderColor.toColorInt()),

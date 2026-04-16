@@ -14,5 +14,13 @@ data class WordModel(
     val ayah: Int,
     val word: Int,
     val location: String?,
+
+    // ── Precomputed layout ───────────────────────────────────────────────────
+    // layoutX, layoutWidth: موقع وعرض الكلمة في الـ canvas (screen space)
+    // lineTop, lineBottom: حدود السطر للـ Y hit-test الصحيح
+    var layoutX: Float = 0f,
+    var layoutWidth: Float = 0f,
+    var lineTop: Float = 0f,
+    var lineBottom: Float = 0f,
 ){
 }

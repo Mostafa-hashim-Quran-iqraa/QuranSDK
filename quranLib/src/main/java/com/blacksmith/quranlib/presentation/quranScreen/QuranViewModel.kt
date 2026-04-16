@@ -1,15 +1,22 @@
 package com.blacksmith.quranlib.presentation.quranScreen
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Typeface
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.FontFamily
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.blacksmith.quranlib.R
 import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.ChapterModel
 import com.blacksmith.quranlib.data.model.LineModel
@@ -31,6 +38,7 @@ class QuranViewModel @Inject constructor(
     var quranRepository: QuranRepository,
 ) : ViewModel()
 {
+
     var isDataLoaded by mutableStateOf(false)
         private set
     var isShowLoader by mutableStateOf(true)
@@ -39,66 +47,104 @@ class QuranViewModel @Inject constructor(
         private set
     var quranPageModels = mutableStateListOf<QuranPageModel>()
         private set
-    private val _fontCache = mutableStateMapOf<String, FontFamily?>()
 
-    init {
-        quranPageModels.clear()
-        _fontCache.clear()
+    private val _typefaceCache = object : LinkedHashMap<String, Typeface>(
+        MAX_CACHED_FONTS + 1, 0.75f, true
+    ) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Typeface>): Boolean =
+            size > MAX_CACHED_FONTS
     }
+    var typefaceSuraName: Typeface? = null
+    private val bitmapCache = mutableMapOf<Int, Bitmap>()
+    private val _fontCacheLock = Any()
 
+    var fontReadyState = mutableStateMapOf<Int, Boolean>()
+        private set
+
+    private var _dataVersion = 0
+    private val _layoutComputedPages = mutableSetOf<String>()
+    private val _layoutLock = Any()
+
+    // Cache للـ glyph widths المقاسة بالـ bitmap — key = "fontKey|text|textSizeInt"
+    // Samsung بيكذب على كل الـ APIs (measureText, getTextBounds, getTextPath, getRunAdvance)
+    // بشكل عشوائي لبعض الـ PUA glyphs، فالحل الوحيد الموثوق هو عد الـ pixels.
+    private val _glyphWidthCache = mutableMapOf<String, Float>()
+    private val _glyphCacheLock = Any()
 
     companion object {
-        private val EMPTY_SURAH = SurahModel()
-        private val EMPTY_CHAPTER = ChapterModel()
-        private val EMPTY_AYA = AyaModel()
+        val EMPTY_SURAH = SurahModel()
+        val EMPTY_CHAPTER = ChapterModel()
+        val EMPTY_AYA = AyaModel()
         const val TOTAL_PAGES = 604
+        private const val MAX_CACHED_FONTS = 30
+        const val MUSHAF_LINES_PER_PAGE = 17
+
+        // Samsung S25 Ultra: textSize=75px
+        // أكبر كلمة طبيعية = 278px = 3.71×ts
+        // أصغر over-report مؤكد = 436px = 5.81×ts
+        // threshold = 4.5× يفصل بينهم بأمان
+        private const val UPPER_THRESHOLD_RATIO = 4.5f
+        private const val LOWER_THRESHOLD_RATIO = 0.4f
+
+        // حجم الـ bitmap المؤقت للقياس (بالـ textSize units)
+        private const val BITMAP_WIDTH_RATIO = 8
+        private const val BITMAP_HEIGHT_RATIO = 2
     }
 
-    suspend fun preloadFontsAround(context: Context, currentPage: Int, range: Int = 3) {
+    // ─── Font helpers ─────────────────────────────────────────────────────────
+    fun getTypefaceForPage(context: Context, page: Int): Typeface? {
+        val key = fontFileNameForPage(page)
+        val cached = synchronized(_fontCacheLock) { _typefaceCache[key] }
+        if (cached != null) return cached
+
         viewModelScope.launch(Dispatchers.IO) {
-            val start = maxOf(1, currentPage - range)
-            val end = minOf(TOTAL_PAGES, currentPage + range)
+            val typeface = loadTypefaceFromAssets(context, key)
+            synchronized(_fontCacheLock) { _typefaceCache[key] = typeface }
+            withContext(Dispatchers.Main) { fontReadyState[page] = true }
+        }
+        return null
+    }
+
+    fun loadBitmap(context: Context, @DrawableRes resId: Int): Bitmap {
+        val drawable = ContextCompat.getDrawable(context, resId)!!
+        val bitmap = createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return bitmap
+    }
+
+    fun getBitmap(context: Context, @DrawableRes resId: Int): Bitmap =
+        bitmapCache.getOrPut(resId) { loadBitmap(context, resId) }
+
+    fun preloadFontsAround(context: Context, currentPage: Int, range: Int = 5) {
+        val start = maxOf(1, currentPage - range)
+        val end = minOf(TOTAL_PAGES, currentPage + range)
+        viewModelScope.launch(Dispatchers.IO) {
             for (page in start..end) {
-                val fontFileName = fontFileNameForPage(page)
-                if (!_fontCache.containsKey(fontFileName)) {
-                    val typeface = loadTypefaceFromAssets(context, fontFileName)
-                    withContext(Dispatchers.Main) {
-                        _fontCache[fontFileName] = typeface
-                    }
-                }
+                val key = fontFileNameForPage(page)
+                val alreadyCached = synchronized(_fontCacheLock) { _typefaceCache.containsKey(key) }
+                if (alreadyCached) continue
+                val typeface = loadTypefaceFromAssets(context, key)
+                synchronized(_fontCacheLock) { _typefaceCache[key] = typeface }
+                withContext(Dispatchers.Main) { fontReadyState[page] = true }
             }
         }
     }
 
-    fun getFontForPage(context: Context, page: Int): FontFamily? {
-        val fontFileName = fontFileNameForPage(page)
-        return _fontCache[fontFileName] ?: run {
-            // Load immediately if not cached
-            viewModelScope.launch(Dispatchers.IO) {
-                val typeface = loadTypefaceFromAssets(context, fontFileName)
-                withContext(Dispatchers.Main) {
-                    _fontCache[fontFileName] = typeface
-                }
-            }
-            null
-        }
-    }
+    fun loadTypefaceFromAssets(context: Context, fontFileName: String): Typeface =
+        Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
 
-    fun loadTypefaceFromAssets(context: Context, fontFileName: String): FontFamily {
-        val typeface = Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
-        return FontFamily(typeface)
-    }
+    fun loadTypefaceFromRes(context: Context, fontResId: Int): Typeface? =
+        ResourcesCompat.getFont(context, fontResId)
 
     private fun fontFileNameForPage(page: Int): String {
-        val pageText = when {
-            page < 10 -> "00$page"
-            page < 100 -> "0$page"
-            else -> "$page"
-        }
-        return "QCF2${pageText}.ttf"
+        val p = page.toString().padStart(3, '0')
+        return "QCF2$p.ttf"
     }
 
-    fun getData(context: Context,) {
+    // ─── Data loading ─────────────────────────────────────────────────────────
+    fun getData(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 isShowLoader = true
@@ -106,107 +152,116 @@ class QuranViewModel @Inject constructor(
                 isDataLoaded = false
             }
             quranPageModels.clear()
-            _fontCache.clear()
-
-            val quranDeferred = async { quranRepository.getQuranData(context) }
-            val pagesDeferred = async { quranRepository.getPages() }
-            val wordsDeferred = async { quranRepository.getWords() }
-            val wordsTextDeferred = async { quranRepository.getWordsText() }
-            // ✅ Preload fonts for first few pages right after data loads
-            val fontsDeferred = async { preloadFontsAround(context, currentPage = 1, range = 604) }
-
-            val quranFileResponseModel = quranDeferred.await()
-            val pages = pagesDeferred.await()
-            val words = wordsDeferred.await()
-            val wordsText = wordsTextDeferred.await()
-            val fonts = fontsDeferred.await()
-
-            // ✅ كل الـ Maps اتبنت مرة واحدة
-            val wordsMap = words.associateBy { it.id }
-            val wordsTextMap = wordsText.associateBy { it.id }
-            val pagesGrouped = pages.groupBy { it.page_number }
-
-            val surahMap = quranFileResponseModel.suras
-                ?.associateBy { it.id!!.toInt() } ?: emptyMap()
-            val chapterMap = quranFileResponseModel.chapters
-                ?.associateBy { it.id!!.toInt() } ?: emptyMap()
-
-            // ✅ أهم تحسين - Map للـ ayas بره الـ loops
-            val ayasMap: Map<Int, Map<Int, AyaModel>> = surahMap.mapValues { (_, surah) ->
-                surah.ayas?.associateBy { it.id!!.toInt() } ?: emptyMap()
+            synchronized(_fontCacheLock) { _typefaceCache.clear() }
+            synchronized(_layoutLock) {
+                _layoutComputedPages.clear()
+                _dataVersion++
             }
+            synchronized(_glyphCacheLock) { _glyphWidthCache.clear() }
+            fontReadyState.clear()
+            typefaceSuraName = loadTypefaceFromRes(context, R.font.surah_name_v4)
 
-            // ✅ ابني الـ list كاملة قبل تحديث الـ UI
-            val newPages = buildList {
-                for ((pageNumber, lines) in pagesGrouped) {
-                    var lineSurahModel = EMPTY_SURAH
-                    var lineChapterModel = EMPTY_CHAPTER
+            try {
+                val quranDeferred = async { quranRepository.getQuranData(context) }
+                val pagesDeferred = async { quranRepository.getPages() }
+                val wordsDeferred = async { quranRepository.getWords() }
+                val wordsTextDeferred = async { quranRepository.getWordsText() }
 
-                    val lineModels = lines.sortedBy { it.line_number }.map { line ->
-                        lineSurahModel = surahMap[line.surah_number] ?: EMPTY_SURAH
-                        lineChapterModel = chapterMap[line.chapter_number] ?: EMPTY_CHAPTER
+                val quranFileResponseModel = quranDeferred.await()
+                val pages = pagesDeferred.await()
+                val words = wordsDeferred.await()
+                val wordsText = wordsTextDeferred.await()
 
-                        val wordList =
-                            (line.first_word_id!!..line.last_word_id!!).mapNotNull { id ->
-                                val word = wordsMap[id] ?: return@mapNotNull null
-                                val wordSurahModel = surahMap[word.surah] ?: EMPTY_SURAH
-                                val ayaModel = ayasMap[word.surah]?.get(word.ayah) ?: EMPTY_AYA
-                                val wordChapterModel =
-                                    chapterMap[ayaModel.chapter_id] ?: EMPTY_CHAPTER
+                val wordsMap = words.associateBy { it.id }
+                val wordsTextMap = wordsText.associateBy { it.id }
+                val pagesGrouped = pages.groupBy { it.page_number }
 
-                                WordModel(
-                                    id = word.id,
-                                    text = word.text ?: "",
-                                    wordText = wordsTextMap[id]?.text ?: "",
-                                    location = word.location,
-                                    surahId = word.surah ?: 0,
-                                    surahName = wordSurahModel.name_ar ?: "",
-                                    chapterId = wordChapterModel.id?.toIntOrNull() ?: 0,
-                                    chapterName = wordChapterModel.name_ar ?: "",
-                                    ayah = word.ayah ?: 0,
-                                    word = word.word ?: 0
-                                )
-                            }
+                val surahMap = quranFileResponseModel.suras
+                    ?.associateBy { it.id!!.toInt() } ?: emptyMap()
+                val chapterMap = quranFileResponseModel.chapters
+                    ?.associateBy { it.id!!.toInt() } ?: emptyMap()
 
-                        LineModel(
-                            lineNumber = line.line_number,
-                            isCentered = (line.is_centered == 1),
-                            surahId = lineSurahModel.id!!.toInt(),
-                            surahName = lineSurahModel.name_ar ?: "",
-                            surahLigature = lineSurahModel.ligature,
-                            chapterId = lineChapterModel.id?.toIntOrNull() ?: 0,
-                            chapterName = lineChapterModel.name_ar ?: "",
-                            line_type = line.line_type,
-                            words = wordList
+                val ayasMap: Map<Int, Map<Int, AyaModel>> = surahMap.mapValues { (_, surah) ->
+                    surah.ayas?.associateBy { it.id!!.toInt() } ?: emptyMap()
+                }
+
+                val newPages = buildList {
+                    for ((pageNumber, lines) in pagesGrouped) {
+                        var lineSurahModel = EMPTY_SURAH
+                        var lineChapterModel = EMPTY_CHAPTER
+
+                        val lineModels = lines.sortedBy { it.line_number }.map { line ->
+                            lineSurahModel = surahMap[line.surah_number] ?: EMPTY_SURAH
+                            lineChapterModel = chapterMap[line.chapter_number] ?: EMPTY_CHAPTER
+
+                            val wordList = (line.first_word_id!!..line.last_word_id!!)
+                                .mapNotNull { id ->
+                                    val word = wordsMap[id] ?: return@mapNotNull null
+                                    val wordSurahModel = surahMap[word.surah] ?: EMPTY_SURAH
+                                    val ayaModel = ayasMap[word.surah]?.get(word.ayah) ?: EMPTY_AYA
+                                    val wordChapterModel =
+                                        chapterMap[ayaModel.chapter_id] ?: EMPTY_CHAPTER
+                                    WordModel(
+                                        id = word.id,
+                                        text = word.text ?: "",
+                                        wordText = wordsTextMap[id]?.text ?: "",
+                                        location = word.location,
+                                        surahId = word.surah ?: 0,
+                                        surahName = wordSurahModel.name_ar ?: "",
+                                        chapterId = wordChapterModel.id?.toIntOrNull() ?: 0,
+                                        chapterName = wordChapterModel.name_ar ?: "",
+                                        ayah = word.ayah ?: 0,
+                                        word = word.word ?: 0,
+                                    )
+                                }
+
+                            LineModel(
+                                lineNumber = line.line_number,
+                                isCentered = (line.is_centered == 1),
+                                surahId = lineSurahModel.id!!.toInt(),
+                                surahName = lineSurahModel.name_ar ?: "",
+                                surahLigature = lineSurahModel.ligature,
+                                chapterId = lineChapterModel.id?.toIntOrNull() ?: 0,
+                                chapterName = lineChapterModel.name_ar ?: "",
+                                line_type = line.line_type,
+                                words = wordList,
+                            )
+                        }
+
+                        add(
+                            QuranPageModel(
+                                pageNumber = pageNumber,
+                                surahModel = lineSurahModel,
+                                lines = lineModels,
+                                chapterModel = lineChapterModel,
+                            )
                         )
                     }
-
-                    add(
-                        QuranPageModel(
-                            pageNumber = pageNumber,
-                            surahModel = lineSurahModel,
-                            lines = lineModels,
-                            chapterModel = lineChapterModel
-                        )
-                    )
                 }
-            }
 
+                withContext(Dispatchers.Main) {
+                    quranPageModels.addAll(newPages)
+                    isShowLoader = false
+                    isShowError = false
+                    isDataLoaded = true
+                }
 
-            // ✅ تحديث الـ UI مرة واحدة على Main thread
-            withContext(Dispatchers.Main) {
-                quranPageModels.clear()
-                quranPageModels.addAll(newPages)
-                isShowLoader = false
-                isShowError = false
-                isDataLoaded = true
+                preloadFontsAround(context, currentPage = 1, range = 5)
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    isShowLoader = false
+                    isShowError = true
+                }
             }
         }
     }
 
-
     override fun onCleared() {
         super.onCleared()
+        synchronized(_fontCacheLock) { _typefaceCache.clear() }
+        synchronized(_layoutLock) { _layoutComputedPages.clear() }
+        synchronized(_glyphCacheLock) { _glyphWidthCache.clear() }
     }
 
 }

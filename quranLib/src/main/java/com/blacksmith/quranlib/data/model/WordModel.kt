@@ -5,7 +5,7 @@ import androidx.compose.runtime.Stable
 @Stable
 data class WordModel(
     val id: Int,
-    val text: String,        // من words
+    val glyph: String,        // من words
     val wordText: String,    // من words_text
     val surahId: Int,
     val surahName: String,

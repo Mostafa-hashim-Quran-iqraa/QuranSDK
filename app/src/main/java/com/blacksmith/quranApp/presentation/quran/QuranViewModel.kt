@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.blacksmith.quranApp.presentation.base.BaseViewModel
+import com.blacksmith.quranlib.data.util.QuranConstants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -25,6 +26,8 @@ open class QuranViewModel @Inject constructor(
 
     var ayahNumberColor by mutableStateOf("")
 
+    var isText by mutableStateOf(true)
+    var quranPagesVersion by mutableIntStateOf(QuranConstants.PAGES_VERSION_2)
 
     fun onDispose() {
     }

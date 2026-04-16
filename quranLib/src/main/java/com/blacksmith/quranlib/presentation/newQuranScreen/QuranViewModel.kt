@@ -3,17 +3,13 @@ package com.blacksmith.quranlib.presentation.newQuranScreen
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Typeface
-import android.os.Build
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.text.font.FontFamily
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.ViewModel
@@ -23,8 +19,6 @@ import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.ChapterModel
 import com.blacksmith.quranlib.data.model.LineModel
 import com.blacksmith.quranlib.data.model.QuranPageModel
-import com.blacksmith.quranlib.data.model.RenderLine
-import com.blacksmith.quranlib.data.model.RenderWord
 import com.blacksmith.quranlib.data.model.SurahModel
 import com.blacksmith.quranlib.data.model.WordModel
 import com.blacksmith.quranlib.domain.remote.QuranRepository
@@ -35,11 +29,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import androidx.core.graphics.createBitmap
+import com.blacksmith.quranlib.data.util.QuranConstants
 
 @HiltViewModel
 class QuranViewModel @Inject constructor(
     var quranRepository: QuranRepository,
-) : ViewModel() {
+) : ViewModel()
+{
 
     var isDataLoaded by mutableStateOf(false)
         private set
@@ -49,6 +45,7 @@ class QuranViewModel @Inject constructor(
         private set
     var quranPageModels = mutableStateListOf<QuranPageModel>()
         private set
+    var pagesVersion = QuranConstants.PAGES_VERSION_2
 
     private val _typefaceCache = object : LinkedHashMap<String, Typeface>(
         MAX_CACHED_FONTS + 1, 0.75f, true
@@ -135,18 +132,24 @@ class QuranViewModel @Inject constructor(
     }
 
     fun loadTypefaceFromAssets(context: Context, fontFileName: String): Typeface =
-        Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
+        if (pagesVersion == QuranConstants.PAGES_VERSION_2)
+            Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
+        else
+            Typeface.createFromAsset(context.assets, "fontsv4/$fontFileName")
 
     fun loadTypefaceFromRes(context: Context, fontResId: Int): Typeface? =
         ResourcesCompat.getFont(context, fontResId)
 
     private fun fontFileNameForPage(page: Int): String {
-        val p = page.toString().padStart(3, '0')
-        return "QCF2$p.ttf"
+        val p = if (pagesVersion == QuranConstants.PAGES_VERSION_2)
+            page.toString().padStart(3, '0')
+        else page.toString()
+        return if (pagesVersion == QuranConstants.PAGES_VERSION_2)  "QCF2$p.ttf" else "p$page.ttf"
     }
 
     // ─── Data loading ─────────────────────────────────────────────────────────
-    fun getData(context: Context) {
+    fun getData(context: Context, versionNumber: Int) {
+        pagesVersion = versionNumber
         viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
                 isShowLoader = true
@@ -165,17 +168,14 @@ class QuranViewModel @Inject constructor(
 
             try {
                 val quranDeferred = async { quranRepository.getQuranData(context) }
-                val pagesDeferred = async { quranRepository.getPages() }
+                val pagesDeferred = async { quranRepository.getPages(pagesVersion) }
                 val wordsDeferred = async { quranRepository.getWords() }
-                val wordsTextDeferred = async { quranRepository.getWordsText() }
 
                 val quranFileResponseModel = quranDeferred.await()
                 val pages = pagesDeferred.await()
                 val words = wordsDeferred.await()
-                val wordsText = wordsTextDeferred.await()
 
                 val wordsMap = words.associateBy { it.id }
-                val wordsTextMap = wordsText.associateBy { it.id }
                 val pagesGrouped = pages.groupBy { it.page_number }
 
                 val surahMap = quranFileResponseModel.suras
@@ -205,8 +205,8 @@ class QuranViewModel @Inject constructor(
                                         chapterMap[ayaModel.chapter_id] ?: EMPTY_CHAPTER
                                     WordModel(
                                         id = word.id,
-                                        text = word.text ?: "",
-                                        wordText = wordsTextMap[id]?.text ?: "",
+                                        glyph = if (pagesVersion == QuranConstants.PAGES_VERSION_2) word.glyphV2 ?: "" else word.glyphV4 ?: "",
+                                        wordText = word.wordText ?: "",
                                         location = word.location,
                                         surahId = word.surah ?: 0,
                                         surahName = wordSurahModel.name_ar ?: "",
@@ -265,4 +265,5 @@ class QuranViewModel @Inject constructor(
         synchronized(_layoutLock) { _layoutComputedPages.clear() }
         synchronized(_glyphCacheLock) { _glyphWidthCache.clear() }
     }
+
 }

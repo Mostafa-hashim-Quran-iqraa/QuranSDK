@@ -21,4 +21,8 @@
     <string name="regular">Regular</string>
     <string name="page_number">Page Number</string>
     <string name="aya_number_color">Aya Number Color</string>
+    <string name="quran_pages_version">Quran pages version</string>
+    <string name="painting_method">Painting Method</string>
+    <string name="text">Text</string>
+    <string name="images">Images</string>
 </resources>

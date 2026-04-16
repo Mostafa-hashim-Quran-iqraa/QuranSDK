@@ -6,5 +6,7 @@ data class WordEntity(
     val surah: Int?,
     val ayah: Int?,
     val word: Int?,
-    val text: String?
+    val glyphV2: String?,
+    val glyphV4: String?,
+    val wordText: String?,
 )

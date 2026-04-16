@@ -45,6 +45,7 @@ import com.blacksmith.quranApp.presentation.base.theme.gray_200
 import com.blacksmith.quranApp.presentation.base.theme.gray_400
 import com.blacksmith.quranApp.presentation.base.theme.transparent
 import com.blacksmith.quranApp.presentation.quran.QuranActivity
+import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.data.util.helper.toSP
 
 @Composable
@@ -650,6 +651,160 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                 }
             }
 
+            //is text
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.toDP),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Center,
+            )
+            {
+                Text(
+                    text = stringResource(R.string.painting_method),
+                    fontSize = 14.toSP,
+                    color = colorPrimary,
+                    fontFamily = fontNeoSansArabicRegular600
+                )
+
+                Row(
+                    modifier = Modifier.padding(top = 5.toDP),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(0.toDP)
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.toDP))
+                            .border(
+                                width = 1.toDP,
+                                color = if (viewModel.isText) colorPrimary else gray_200,
+                                shape = RoundedCornerShape(8.toDP)
+                            )
+                            .clickable(
+                                onClick = {
+                                    viewModel.isText = true
+                                }
+                            )
+                            .background(if (viewModel.isText) colorPrimary else White)
+                            .padding(4.toDP),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.text),
+                            fontSize = 14.toSP,
+                            color = if (viewModel.isText) White else colorPrimary,
+                            fontFamily = fontNeoSansArabicRegular600
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 10.toDP)
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.toDP))
+                            .border(
+                                width = 1.toDP,
+                                color = if (!viewModel.isText) colorPrimary else gray_200,
+                                shape = RoundedCornerShape(8.toDP)
+                            )
+                            .clickable(
+                                onClick = {
+                                    viewModel.isText = false
+                                }
+                            )
+                            .background(if (!viewModel.isText) colorPrimary else White)
+                            .padding(4.toDP),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.images),
+                            fontSize = 14.toSP,
+                            color = if (!viewModel.isText) White else colorPrimary,
+                            fontFamily = fontNeoSansArabicRegular600
+                        )
+                    }
+                }
+            }
+
+            //pages version
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.toDP),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Center,
+            )
+            {
+                Text(
+                    text = stringResource(R.string.quran_pages_version),
+                    fontSize = 14.toSP,
+                    color = colorPrimary,
+                    fontFamily = fontNeoSansArabicRegular600
+                )
+
+                Row(
+                    modifier = Modifier.padding(top = 5.toDP),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(0.toDP)
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.toDP))
+                            .border(
+                                width = 1.toDP,
+                                color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_2) colorPrimary else gray_200,
+                                shape = RoundedCornerShape(8.toDP)
+                            )
+                            .clickable(
+                                onClick = {
+                                    viewModel.quranPagesVersion = QuranConstants.PAGES_VERSION_2
+                                }
+                            )
+                            .background(if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_2) colorPrimary else White)
+                            .padding(4.toDP),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "2",
+                            fontSize = 14.toSP,
+                            color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_2) White else colorPrimary,
+                            fontFamily = fontNeoSansArabicRegular600
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 10.toDP)
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.toDP))
+                            .border(
+                                width = 1.toDP,
+                                color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4) colorPrimary else gray_200,
+                                shape = RoundedCornerShape(8.toDP)
+                            )
+                            .clickable(
+                                onClick = {
+                                    viewModel.quranPagesVersion = QuranConstants.PAGES_VERSION_4
+                                }
+                            )
+                            .background(if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4) colorPrimary else White)
+                            .padding(4.toDP),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "4",
+                            fontSize = 14.toSP,
+                            color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4) White else colorPrimary,
+                            fontFamily = fontNeoSansArabicRegular600
+                        )
+                    }
+                }
+            }
+
             //page to open
             Column(
                 modifier = Modifier
@@ -717,6 +872,9 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                                     putExtra("isEnableJuzClick", viewModel.isEnableJuzClick)
                                     putExtra("isEnableSuraClick", viewModel.isEnableSuraClick)
                                     putExtra("isBoldFont", viewModel.isBoldFont)
+                                    putExtra("isText", viewModel.isText)
+                                    putExtra("quranPagesVersion", viewModel.quranPagesVersion)
+                                    //page bg
 
                                     //bg color
                                     val selectedBGColor =

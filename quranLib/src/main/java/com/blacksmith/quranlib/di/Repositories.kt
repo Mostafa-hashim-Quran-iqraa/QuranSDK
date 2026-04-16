@@ -21,8 +21,8 @@ object Repositories {
     fun providesQuranRepository(
         @ApplicationContext context: Context,
     ): QuranRepository {
-        DatabaseCopier.copyDatabase(context, "qpc_v4_tajweed_15_lines.db")
-        val db = DatabaseProvider.openDatabase(context, "qpc_v4_tajweed_15_lines.db")
+        DatabaseCopier.copyDatabase(context, "quran.db")
+        val db = DatabaseProvider.openDatabase(context, "quran.db")
         return QuranRepositoryImp(db)
     }
 }

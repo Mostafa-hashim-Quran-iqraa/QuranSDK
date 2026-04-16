@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.blacksmith.quranlib.data.model.PageEntity
 import com.blacksmith.quranlib.data.model.WordEntity
 import com.blacksmith.quranlib.data.model.WordTextEntity
+import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.domain.parseFromJson
 import com.blacksmith.quranlib.domain.remote.QuranRepository
 import com.blacksmith.quranlib.domain.response.QuranFileResponseModel
@@ -17,31 +18,34 @@ class QuranRepositoryImp @Inject constructor(
     private val db: SQLiteDatabase
 ) : QuranRepository {
 
-    override suspend fun getPages(): List<PageEntity> = withContext(Dispatchers.IO) {
-        val list = mutableListOf<PageEntity>()
+    override suspend fun getPages(versionNumber: Int): List<PageEntity> =
+        withContext(Dispatchers.IO) {
+            val list = mutableListOf<PageEntity>()
 
-        val cursor = db.rawQuery("SELECT * FROM pages", null)
+            val cursor = if (versionNumber == QuranConstants.PAGES_VERSION_2) db.rawQuery("SELECT * FROM pages_v2", null)
+            else db.rawQuery("SELECT * FROM pages_v4", null)
 
-        cursor.use {
-            while (it.moveToNext()) {
-                list.add(
-                    PageEntity(
-                        page_number = it.getInt(it.getColumnIndexOrThrow("page_number")),
-                        line_number = it.getInt(it.getColumnIndexOrThrow("line_number")),
-                        line_type = it.getString(it.getColumnIndexOrThrow("line_type")),
-                        is_centered = it.getInt(it.getColumnIndexOrThrow("is_centered")),
-                        first_word_id = it.getInt(it.getColumnIndexOrThrow("first_word_id")),
-                        last_word_id = it.getInt(it.getColumnIndexOrThrow("last_word_id")),
-                        surah_number = it.getInt(it.getColumnIndexOrThrow("surah_number")),
-                        chapter_number = it.getInt(it.getColumnIndexOrThrow("chapter_number"))
+            cursor.use {
+                while (it.moveToNext()) {
+                    list.add(
+                        PageEntity(
+                            page_number = it.getInt(it.getColumnIndexOrThrow("page_number")),
+                            line_number = it.getInt(it.getColumnIndexOrThrow("line_number")),
+                            line_type = it.getString(it.getColumnIndexOrThrow("line_type")),
+                            is_centered = it.getInt(it.getColumnIndexOrThrow("is_centered")),
+                            first_word_id = it.getInt(it.getColumnIndexOrThrow("first_word_id")),
+                            last_word_id = it.getInt(it.getColumnIndexOrThrow("last_word_id")),
+                            surah_number = it.getInt(it.getColumnIndexOrThrow("surah_number")),
+                            chapter_number = it.getInt(it.getColumnIndexOrThrow("chapter_number"))
+                        )
                     )
-                )
+                }
             }
+
+            list
         }
 
-        list
-    }
-    override suspend fun getWords() : List<WordEntity> = withContext(Dispatchers.IO) {
+    override suspend fun getWords(): List<WordEntity> = withContext(Dispatchers.IO) {
         val list = mutableListOf<WordEntity>()
 
         val cursor = db.rawQuery("SELECT * FROM words", null)
@@ -55,33 +59,14 @@ class QuranRepositoryImp @Inject constructor(
                         surah = it.getInt(it.getColumnIndexOrThrow("surah")),
                         ayah = it.getInt(it.getColumnIndexOrThrow("ayah")),
                         word = it.getInt(it.getColumnIndexOrThrow("word")),
-                        text = it.getString(it.getColumnIndexOrThrow("text"))
+                        glyphV2 = it.getString(it.getColumnIndexOrThrow("glyph_v2")),
+                        glyphV4 = it.getString(it.getColumnIndexOrThrow("glyph_v4")),
+                        wordText = it.getString(it.getColumnIndexOrThrow("word_text"))
                     )
                 )
             }
         }
 
-        list
-    }
-    override suspend fun getWordsText(): List<WordTextEntity> = withContext(Dispatchers.IO) {
-        val list = mutableListOf<WordTextEntity>()
-
-        val cursor = db.rawQuery("SELECT * FROM words_text", null)
-
-        cursor.use {
-            while (it.moveToNext()) {
-                list.add(
-                    WordTextEntity(
-                        id = it.getInt(it.getColumnIndexOrThrow("id")),
-                        location = it.getString(it.getColumnIndexOrThrow("location")),
-                        surah = it.getInt(it.getColumnIndexOrThrow("surah")),
-                        ayah = it.getInt(it.getColumnIndexOrThrow("ayah")),
-                        word = it.getInt(it.getColumnIndexOrThrow("word")),
-                        text = it.getString(it.getColumnIndexOrThrow("text"))
-                    )
-                )
-            }
-        }
         list
     }
 

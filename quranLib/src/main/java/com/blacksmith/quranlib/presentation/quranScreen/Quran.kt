@@ -43,13 +43,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.boundsInParent
-import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -74,10 +71,10 @@ import com.blacksmith.quranlib.data.model.LineModel
 import com.blacksmith.quranlib.data.model.QuranPageModel
 import com.blacksmith.quranlib.data.model.SurahModel
 import com.blacksmith.quranlib.data.model.WordModel
+import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.data.util.component.ComposableLifecycle
 import com.blacksmith.quranlib.data.util.component.ErrorView
 import com.blacksmith.quranlib.data.util.component.LoaderLottie
-import com.blacksmith.quranlib.data.util.helper.dpToPx
 import com.blacksmith.quranlib.data.util.helper.toDP
 import com.blacksmith.quranlib.data.util.helper.toSP
 import com.blacksmith.quranlib.presentation.theme.Black
@@ -92,6 +89,7 @@ import kotlinx.coroutines.CoroutineScope
 @Composable
 fun QuranPageScreen(
     viewModel: QuranViewModel = hiltViewModel(),
+    quranPagesVersion: Int = QuranConstants.PAGES_VERSION_2,
     isReversePager: Boolean = false,
     pageBackground: Color = White,
     fontColor: Color = Black,
@@ -111,7 +109,7 @@ fun QuranPageScreen(
     ComposableLifecycle { _, event ->
         when (event) {
             Lifecycle.Event.ON_START -> {
-                if (!viewModel.isDataLoaded) viewModel.getData(context)
+                if (!viewModel.isDataLoaded) viewModel.getData(context, quranPagesVersion)
             }
 
             else -> {}
@@ -130,6 +128,7 @@ fun QuranPageScreen(
         pagerState = pagerState,
         coroutineScope = coroutineScope,
         viewModel = viewModel,
+        quranPagesVersion = quranPagesVersion,
         isReversePager = isReversePager,
         pageBackground = pageBackground,
         fontColor = fontColor,
@@ -154,6 +153,7 @@ fun Content(
     pagerState: PagerState,
     coroutineScope: CoroutineScope,
     viewModel: QuranViewModel,
+    quranPagesVersion: Int,
     isReversePager: Boolean,
     pageBackground: Color,
     fontColor: Color,
@@ -187,7 +187,7 @@ fun Content(
                 ErrorView(
                     title = "Error",
                     message = "Error",
-                    onClick = { viewModel.getData(context) },
+                    onClick = { viewModel.getData(context,quranPagesVersion) },
                 )
                 return@Box
             }
@@ -724,7 +724,7 @@ private fun WordText(
     onLongClick: () -> Unit,
 ) {
     Text(
-        text = word.text,
+        text = word.glyph,
         color = fontColor,
         style = textStyle,
         fontFamily = fontFamily,

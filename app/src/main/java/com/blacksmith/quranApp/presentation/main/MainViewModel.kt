@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.blacksmith.quranApp.data.model.ColorModel
 import com.blacksmith.quranApp.presentation.base.BaseViewModel
+import com.blacksmith.quranlib.data.util.QuranConstants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -25,6 +26,8 @@ open class MainViewModel @Inject constructor(
     var isEnableJuzClick by mutableStateOf(false)
     var isEnableSuraClick by mutableStateOf(false)
     var isBoldFont by mutableStateOf(true)
+    var isText by mutableStateOf(true)
+    var quranPagesVersion by mutableIntStateOf(QuranConstants.PAGES_VERSION_2)
 
     init {
         initBGColorList()

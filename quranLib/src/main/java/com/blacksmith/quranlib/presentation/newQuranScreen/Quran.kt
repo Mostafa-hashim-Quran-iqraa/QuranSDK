@@ -66,10 +66,17 @@ import android.graphics.PorterDuffColorFilter
 import android.graphics.RectF
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.PopupPositionProvider
 import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.presentation.theme.red_light
 import kotlin.math.roundToInt
@@ -104,7 +111,7 @@ fun QuranPageScreen(
 
     ComposableLifecycle { _, event ->
         if (event == Lifecycle.Event.ON_START && !viewModel.isDataLoaded) {
-            viewModel.getData(context,quranPagesVersion)
+            viewModel.getData(context, quranPagesVersion)
         }
     }
 
@@ -175,7 +182,7 @@ private fun QuranContent(
                     ErrorView(
                         title = "Error",
                         message = "Error",
-                        onClick = { viewModel.getData(context,quranPagesVersion) },
+                        onClick = { viewModel.getData(context, quranPagesVersion) },
                     )
                 }
 
@@ -327,6 +334,44 @@ private fun QuranPageItem(
 }
 
 // =============================================================================
+// WordMenuPositionProvider
+// بياخد موقع الكلمة في الـ window ويحسب موقع المنيو فوقها أو تحتها
+// الـ Popup بيستدعي calculatePosition بعد ما يحسب حجمه الفعلي
+// =============================================================================
+@Stable
+private class WordMenuPositionProvider(
+    private val wordRectInWindow: android.graphics.RectF,
+    private val menuMarginPx: Int,
+    private val screenWidthPx: Int,
+) : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        val menuH = popupContentSize.height
+        val menuW = popupContentSize.width
+
+        val wordTop = wordRectInWindow.top.toInt()
+        val wordBottom = wordRectInWindow.bottom.toInt()
+        val wordLeft = wordRectInWindow.left.toInt()
+
+        // فوق الكلمة لو في مكان كافي، وإلا تحتها
+        val y = if (wordTop - menuH - menuMarginPx >= 0) {
+            wordTop - menuH - menuMarginPx
+        } else {
+            wordBottom + menuMarginPx
+        }
+
+        // X: نبدأ من يسار الكلمة مع تجنب الخروج من الشاشة
+        val x = wordLeft.coerceIn(0, (screenWidthPx - menuW).coerceAtLeast(0))
+
+        return IntOffset(x, y)
+    }
+}
+
+// =============================================================================
 // CanvasQuranPage
 // =============================================================================
 @Composable
@@ -352,7 +397,16 @@ private fun CanvasQuranPage(
     var selectedAyah by remember(pageModel) { mutableStateOf<Int?>(null) }
     var selectedSurah by remember(pageModel) { mutableStateOf<Int?>(null) }
     var showContextMenu by remember { mutableStateOf(false) }
-    var menuAnchorOffset by remember { mutableStateOf(Offset.Zero) }
+
+    // موقع الكلمة المحددة في الـ window الحقيقي بالـ px
+    var selectedWordRectInWindow by remember { mutableStateOf(android.graphics.RectF()) }
+
+    // موقع الـ Canvas في الـ window
+    var canvasWindowOffset by remember { mutableStateOf(Offset.Zero) }
+
+    val density = LocalDensity.current
+    val screenWidthPx = context.resources.displayMetrics.widthPixels
+    val menuMarginPx = with(density) { 6.dp.roundToPx() }
 
     val wordRects = remember(pageModel) { mutableListOf<Pair<WordModel, RectF>>() }
 
@@ -380,10 +434,24 @@ private fun CanvasQuranPage(
         }
     }
 
+    // نبني الـ provider بناءً على موقع الكلمة الحالية
+    // بيتبنى من جديد بس لما selectedWordRectInWindow يتغير
+    val positionProvider = remember(selectedWordRectInWindow) {
+        WordMenuPositionProvider(
+            wordRectInWindow = selectedWordRectInWindow,
+            menuMarginPx = menuMarginPx,
+            screenWidthPx = screenWidthPx,
+        )
+    }
+
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
+                .onGloballyPositioned { coords ->
+                    // نسجل موقع الـ Canvas في الـ window مرة واحدة
+                    canvasWindowOffset = coords.positionInWindow()
+                }
                 .pointerInput(pageModel, isAyaHighlight) {
                     detectTapGestures(
                         onTap = {
@@ -396,6 +464,7 @@ private fun CanvasQuranPage(
                             val hit = wordRects.firstOrNull { (_, rect) ->
                                 rect.contains(tapOffset.x, tapOffset.y)
                             }?.first
+
                             if (hit != null) {
                                 if (isAyaHighlight) {
                                     selectedAyah = hit.ayah
@@ -405,9 +474,16 @@ private fun CanvasQuranPage(
                                     selectedAyah = null
                                 }
                                 selectedSurah = hit.surahId
+
+                                // نحوّل موقع الكلمة من Canvas-local إلى Window
                                 val hitRect = wordRects.firstOrNull { it.first == hit }?.second
                                 if (hitRect != null) {
-                                    menuAnchorOffset = Offset(hitRect.left, hitRect.top)
+                                    selectedWordRectInWindow = android.graphics.RectF(
+                                        canvasWindowOffset.x + hitRect.left,
+                                        canvasWindowOffset.y + hitRect.top,
+                                        canvasWindowOffset.x + hitRect.right,
+                                        canvasWindowOffset.y + hitRect.bottom,
+                                    )
                                 }
                                 showContextMenu = true
                             }
@@ -438,14 +514,9 @@ private fun CanvasQuranPage(
             )
         }
 
-        AnimatedVisibility(
-            visible = showContextMenu && (selectedWord != null || selectedAyah != null),
-        ) {
+        if (showContextMenu && (selectedWord != null || selectedAyah != null)) {
             Popup(
-                offset = IntOffset(
-                    menuAnchorOffset.x.roundToInt(),
-                    menuAnchorOffset.y.roundToInt(),
-                ),
+                popupPositionProvider = positionProvider,
                 onDismissRequest = {
                     showContextMenu = false
                     selectedWord = null
@@ -454,8 +525,7 @@ private fun CanvasQuranPage(
             ) {
                 QuranContextMenu(
                     onCopy = {
-                        val cb =
-                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cb.setPrimaryClip(ClipData.newPlainText("quran", selectedText))
                         showContextMenu = false
                         selectedWord = null
@@ -523,8 +593,6 @@ private fun drawPageContent(
             when (line.line_type) {
 
                 LineModel.LINE_TYPE_SURAH_NAME -> {
-                    // نمد الهيدر خارج الـ canvas بمقدار الـ padding الأفقي من كل جهة
-                    // عشان يبدأ وينتهي مع حواف الشاشة مش مع حواف الـ canvas
                     val bitmapRatio = suraHeaderBitmap.width.toFloat() / suraHeaderBitmap.height
                     val drawW = canvasWidth + horizontalPaddingPx * 2f
                     val drawH = drawW / bitmapRatio
@@ -553,14 +621,9 @@ private fun drawPageContent(
                 }
 
                 LineModel.LINE_TYPE_BASMALAH -> {
-                    // نحسب الحجم على أساس الـ lineHeight مش hPad ثابت
-                    // عشان يشتغل صح على كل densities بما فيها S25 Ultra (density=3.75)
                     val ratio = basmalaBitmap.width.toFloat() / basmalaBitmap.height
-                    // الارتفاع = 85% من lineHeight
                     val drawH = lineHeight * 0.85f
-                    // العرض على أساس الـ ratio، بحد أقصى 70% من عرض الكانفاس
                     val drawW = (drawH * ratio).coerceAtMost(canvasWidth * 0.7f)
-                    // نعيد حساب الارتفاع لو اتضغط العرض
                     val finalH = drawW / ratio
                     val drawLeft = (canvasWidth - drawW) / 2f
                     val drawTop = lineTop + (lineHeight - finalH) / 2f
@@ -579,27 +642,11 @@ private fun drawPageContent(
                     val words = line.words
                     if (words.isEmpty()) return@forEachIndexed
 
-                    // ── ROOT CAUSE FIX ────────────────────────────────────────
-                    // الفونت القرآني ده عنده glyphs بـ advance width صغير جداً
-                    // لكن الـ ink (bounds.right) أكبر بكتير.
-                    // مثال: advance=34 لكن bounds.right=290
-                    //
-                    // ده معناه إن الـ glyph مصمم يتراكب على الكلمة اللي جنبه،
-                    // لكن في الـ layout بتاعنا ده بيعمل overlap مرئي.
-                    //
-                    // الحل: نستخدم bounds.right كعرض فعلي لكل كلمة في حساب الـ
-                    // layout والـ positions، مش الـ advance width.
-                    // كده الـ justified gap بيتحسب على العرض البصري الحقيقي.
                     val wordMetrics = Array(words.size) { i ->
                         val bounds = android.graphics.Rect()
                         textPaint.getTextBounds(words[i].glyph, 0, words[i].glyph.length, bounds)
                         val advance = measureWordWidth(textPaint, words[i].glyph)
                         val boundsRight = bounds.right.toFloat()
-                        // نستخدم bounds.right بس لو أكبر من advance بنسبة معقولة (< 4x)
-                        // لو bounds.right أكبر بكتير (زي advance=8, bounds.right=264)
-                        // ده glyph من النوع اللي بيتراكب عمداً — نستخدم bounds.right
-                        // لو bounds.right أكبر بنسبة صغيرة أو أقل — نستخدم advance
-                        // الفرق الكبير (> 3x) هو علامة الـ zero-width overlapping glyph
                         val visualWidth = if (boundsRight > advance * 3f) {
                             boundsRight
                         } else {
@@ -608,20 +655,16 @@ private fun drawPageContent(
                         Pair(visualWidth, 0f)
                     }
 
-                    // العرض البصري الكلي للسطر (بدون gaps)
                     val totalVisualWidth = wordMetrics.sumOf { it.first.toDouble() }.toFloat()
-
                     val count = words.size
                     val minGapTotal = if (count > 1) WORD_GAP_PX * (count - 1) else 0f
 
-                    // لو حتى بأدنى gap السطر أكبر من الكانفاس، نضغط الـ canvas
                     val scaleX = if (totalVisualWidth + minGapTotal > canvasWidth) {
                         canvasWidth / (totalVisualWidth + minGapTotal)
                     } else {
                         1f
                     }
 
-                    // الـ positions تتحسب في الـ unscaled space
                     val virtualWidth = canvasWidth / scaleX
                     val xPositions = computeWordPositions(virtualWidth, line, textPaint, wordMetrics)
 
@@ -667,15 +710,13 @@ private fun drawPageContent(
                     words.forEachIndexed { i, word ->
                         val x = xPositions[i]
                         val vw = wordMetrics[i].first
-                        // لو الكلمة رقم آية (كل حروفها أرقام عربية) نغير لونها
                         val isAyahNum = word.wordText.isNotEmpty() &&
                                 word.wordText.all { it in '٠'..'٩' }
                         if (isAyahNum) textPaint.color = ayahNumberColorArgb
                         nativeCanvas.drawText(word.glyph, x, baseline, textPaint)
                         if (isAyahNum) textPaint.color = fontColorArgb
 
-                        // wordRects في screen space الحقيقي
-                        val scaledLeft  = canvasWidth - (canvasWidth - x) * scaleX
+                        val scaledLeft = canvasWidth - (canvasWidth - x) * scaleX
                         val scaledRight = canvasWidth - (canvasWidth - (x + vw)) * scaleX
                         wordRectsOut.add(word to RectF(scaledLeft, lineTop, scaledRight, lineTop + lineHeight))
                     }
@@ -689,13 +730,12 @@ private fun drawPageContent(
 
 // =============================================================================
 // computeWordPositions
-// الآن بتاخد wordMetrics عشان تستخدم الـ visual width مش الـ advance
 // =============================================================================
 private fun computeWordPositions(
     canvasWidth: Float,
     line: LineModel,
     textPaint: Paint,
-    wordMetrics: Array<Pair<Float, Float>>, // (visualWidth, leftBearing)
+    wordMetrics: Array<Pair<Float, Float>>,
 ): FloatArray {
     val words = line.words
     val count = words.size
@@ -714,7 +754,6 @@ private fun computeWordPositions(
             if (i < count - 1) x -= WORD_GAP_PX
         }
     } else {
-        // justified: extraSpace دايماً >= 0 لأن scaleX في drawPageContent بيضمن ده
         val extraSpace = (canvasWidth - totalVisualWidth).coerceAtLeast(0f)
         val gap = if (count > 1) extraSpace / (count - 1) else 0f
         var x = canvasWidth - visualWidths[0]
@@ -729,7 +768,6 @@ private fun computeWordPositions(
     return positions
 }
 
-// overload قديم للتوافق مع أي استدعاءات تانية
 private fun computeWordPositions(
     canvasWidth: Float,
     line: LineModel,

@@ -802,6 +802,33 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             fontFamily = fontNeoSansArabicRegular600
                         )
                     }
+
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 10.toDP)
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.toDP))
+                            .border(
+                                width = 1.toDP,
+                                color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4_colored) colorPrimary else gray_200,
+                                shape = RoundedCornerShape(8.toDP)
+                            )
+                            .clickable(
+                                onClick = {
+                                    viewModel.quranPagesVersion = QuranConstants.PAGES_VERSION_4_colored
+                                }
+                            )
+                            .background(if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4_colored) colorPrimary else White)
+                            .padding(4.toDP),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string._4_colored),
+                            fontSize = 14.toSP,
+                            color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4_colored) White else colorPrimary,
+                            fontFamily = fontNeoSansArabicRegular600
+                        )
+                    }
                 }
             }
 

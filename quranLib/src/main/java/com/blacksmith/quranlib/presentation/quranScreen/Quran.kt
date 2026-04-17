@@ -46,6 +46,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -187,7 +188,7 @@ fun Content(
                 ErrorView(
                     title = "Error",
                     message = "Error",
-                    onClick = { viewModel.getData(context,quranPagesVersion) },
+                    onClick = { viewModel.getData(context, quranPagesVersion) },
                 )
                 return@Box
             }
@@ -455,7 +456,7 @@ fun Page(
             Column(
                 modifier = Modifier
                     .padding(horizontal = 15.dp)
-                    .fillMaxSize(),
+                    .fillMaxSize().graphicsLayer { clip = false },
                 verticalArrangement = Arrangement.spacedBy(
                     if (pageModel.pageNumber > 2) 0.dp else 5.dp,
                     Alignment.CenterVertically
@@ -466,6 +467,7 @@ fun Page(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .graphicsLayer { clip = false }
                             .height(lineHeightDp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -511,7 +513,10 @@ fun Page(
                                         words.map { it.id }.filter { it in selectedIds }.toSet()
                                     }
 
-                                    Box(modifier = Modifier.fillMaxWidth()) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .graphicsLayer { clip = false }) {
 
                                         if (line.isCentered) {
                                             Row(
@@ -528,12 +533,16 @@ fun Page(
                                                                     word.wordText.all { it in '٠'..'٩' }
 
                                                         WordText(
-                                                            modifier = Modifier.onGloballyPositioned { coords ->
-                                                                if (isWordSelected) {
-                                                                    wordBounds[word.id] =
-                                                                        coords.boundsInWindow()
+                                                            modifier = Modifier
+                                                                .graphicsLayer {
+                                                                    clip = false
                                                                 }
-                                                            },
+                                                                .onGloballyPositioned { coords ->
+                                                                    if (isWordSelected) {
+                                                                        wordBounds[word.id] =
+                                                                            coords.boundsInWindow()
+                                                                    }
+                                                                },
                                                             word = word,
                                                             fontFamily = quranFont,
                                                             fontColor = if (isAyahNum) ayahNumberColor else fontColor,
@@ -568,7 +577,7 @@ fun Page(
                                                                         word.wordText.all { it in '٠'..'٩' }
 
                                                             WordText(
-                                                                modifier = Modifier.onGloballyPositioned { coords ->
+                                                                modifier = Modifier.graphicsLayer { clip = false }.onGloballyPositioned { coords ->
                                                                     if (isWordSelected) {
                                                                         wordBounds[word.id] =
                                                                             coords.boundsInWindow()
@@ -730,6 +739,7 @@ private fun WordText(
         fontFamily = fontFamily,
         fontSize = fontSize,
         modifier = modifier
+            .graphicsLayer { clip = false }
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick

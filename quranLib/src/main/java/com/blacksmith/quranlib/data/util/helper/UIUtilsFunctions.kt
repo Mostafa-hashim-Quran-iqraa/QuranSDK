@@ -2,6 +2,7 @@ package com.blacksmith.quranlib.data.util.helper
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Paint
 import android.text.Html
 import android.util.Patterns
 import android.view.inputmethod.InputMethodManager
@@ -25,6 +26,24 @@ fun getRandomNumber(): Int {
     val low = 10000
     val high = 1000000000
     return (System.currentTimeMillis() % Integer.MAX_VALUE).toInt() + (r.nextInt(high - low) + low)
+}
+
+fun measureWordWidth(textPaint: Paint, text: String): Float {
+    if (text.isEmpty()) return 0f
+    val widths = FloatArray(text.length)
+    textPaint.getTextWidths(text, widths)
+    return widths.sum()
+}
+
+fun Int.dpToPx(context: Context): Float =
+    this * context.resources.displayMetrics.density
+
+private fun String.isAyahNumber(): Boolean =
+    isNotEmpty() && all { it in '٠'..'٩' }
+
+fun toArabicNumber(number: Int): String {
+    val arabicDigits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
+    return number.toString().map { arabicDigits[it - '0'] }.joinToString("")
 }
 
 fun hideKeyboard(context: Context) {

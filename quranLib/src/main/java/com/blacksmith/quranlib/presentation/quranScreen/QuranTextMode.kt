@@ -76,6 +76,7 @@ import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.data.util.component.ComposableLifecycle
 import com.blacksmith.quranlib.data.util.component.ErrorView
 import com.blacksmith.quranlib.data.util.component.LoaderLottie
+import com.blacksmith.quranlib.data.util.helper.toArabicNumber
 import com.blacksmith.quranlib.data.util.helper.toDP
 import com.blacksmith.quranlib.data.util.helper.toSP
 import com.blacksmith.quranlib.presentation.theme.Black
@@ -86,9 +87,10 @@ import com.blacksmith.quranlib.presentation.theme.colorPrimary
 import com.blacksmith.quranlib.presentation.theme.colorPrimaryMoreLight
 import com.blacksmith.quranlib.presentation.theme.red_light
 import kotlinx.coroutines.CoroutineScope
+import kotlin.collections.get
 
 @Composable
-fun QuranPageScreen(
+fun QuranPageTextModeScreen(
     viewModel: QuranViewModel = hiltViewModel(),
     quranPagesVersion: Int = QuranConstants.PAGES_VERSION_2,
     isReversePager: Boolean = false,
@@ -124,6 +126,14 @@ fun QuranPageScreen(
         pageCount = { 604 }
     )
 
+    LaunchedEffect(pageToOpen) {
+        if (pageToOpen > 0) {
+            val targetIndex = pageToOpen.coerceIn(1, 604) - 1
+            if (targetIndex != pagerState.currentPage) {
+                pagerState.animateScrollToPage(targetIndex)
+            }
+        }
+    }
     Content(
         context = context,
         pagerState = pagerState,
@@ -254,7 +264,9 @@ fun Content(
                                         textAlign = TextAlign.Center,
                                         textDecoration = if (isSurahClickable) TextDecoration.Underline else TextDecoration.None,
                                         modifier = Modifier.clickable {
-                                            if (isSurahClickable) onClickSurahName.invoke(pageModel.surahModel)
+                                            if (isSurahClickable) onClickSurahName.invoke(
+                                                pageModel.surahModel
+                                            )
                                         }
                                     )
                                 }
@@ -451,12 +463,13 @@ fun Page(
                 .fillMaxSize()
         ) {
             val lineHeightDp = remember(constraints.maxHeight) {
-                with(density) { (constraints.maxHeight / QuranViewModel.MUSHAF_LINES_PER_PAGE.toFloat()).toDp() }
+                with(density) { (constraints.maxHeight / QuranViewModel.Companion.MUSHAF_LINES_PER_PAGE.toFloat()).toDp() }
             }
             Column(
                 modifier = Modifier
                     .padding(horizontal = 15.dp)
-                    .fillMaxSize().graphicsLayer { clip = false },
+                    .fillMaxSize()
+                    .graphicsLayer { clip = false },
                 verticalArrangement = Arrangement.spacedBy(
                     if (pageModel.pageNumber > 2) 0.dp else 5.dp,
                     Alignment.CenterVertically
@@ -577,12 +590,16 @@ fun Page(
                                                                         word.wordText.all { it in '٠'..'٩' }
 
                                                             WordText(
-                                                                modifier = Modifier.graphicsLayer { clip = false }.onGloballyPositioned { coords ->
-                                                                    if (isWordSelected) {
-                                                                        wordBounds[word.id] =
-                                                                            coords.boundsInWindow()
+                                                                modifier = Modifier
+                                                                    .graphicsLayer {
+                                                                        clip = false
                                                                     }
-                                                                },
+                                                                    .onGloballyPositioned { coords ->
+                                                                        if (isWordSelected) {
+                                                                            wordBounds[word.id] =
+                                                                                coords.boundsInWindow()
+                                                                        }
+                                                                    },
                                                                 word = word,
                                                                 fontFamily = quranFont,
                                                                 fontColor = if (isAyahNum) ayahNumberColor else fontColor,
@@ -608,8 +625,10 @@ fun Page(
                                                 val placeables = measurables.map {
                                                     it.measure(constraints.copy(minWidth = 0))
                                                 }
-                                                val totalWordsWidth = placeables.sumOf { it.width }
-                                                val gaps = (placeables.size - 1).coerceAtLeast(1)
+                                                val totalWordsWidth =
+                                                    placeables.sumOf { it.width }
+                                                val gaps =
+                                                    (placeables.size - 1).coerceAtLeast(1)
                                                 val spacing =
                                                     ((constraints.maxWidth - totalWordsWidth) / gaps)
                                                         .coerceAtLeast(0)
@@ -660,7 +679,10 @@ fun Page(
 
                                                         drawRect(
                                                             color = highlightColor,
-                                                            topLeft = Offset(localLeft, localTop),
+                                                            topLeft = Offset(
+                                                                localLeft,
+                                                                localTop
+                                                            ),
                                                             size = Size(
                                                                 localRight - localLeft,
                                                                 localBottom - localTop
@@ -748,7 +770,3 @@ private fun WordText(
 }
 
 
-fun toArabicNumber(number: Int): String {
-    val arabicDigits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
-    return number.toString().map { arabicDigits[it - '0'] }.joinToString("")
-}

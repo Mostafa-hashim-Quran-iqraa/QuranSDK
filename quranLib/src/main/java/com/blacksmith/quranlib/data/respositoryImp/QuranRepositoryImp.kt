@@ -2,6 +2,7 @@ package com.blacksmith.quranlib.data.respositoryImp
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.PageEntity
 import com.blacksmith.quranlib.data.model.WordEntity
 import com.blacksmith.quranlib.data.model.WordTextEntity
@@ -17,6 +18,9 @@ import javax.inject.Inject
 class QuranRepositoryImp @Inject constructor(
     private val db: SQLiteDatabase
 ) : QuranRepository {
+
+    @Volatile
+    private var _cachedQuranData: QuranFileResponseModel? = null
 
     override suspend fun getPages(versionNumber: Int): List<PageEntity> =
         withContext(Dispatchers.IO) {
@@ -71,6 +75,7 @@ class QuranRepositoryImp @Inject constructor(
     }
 
     override suspend fun getQuranData(context: Context): QuranFileResponseModel {
+        _cachedQuranData?.let { return it }
         var quranFileResponseModel = QuranFileResponseModel()
         try {
             val quranText = context.assets.open("quran.json").bufferedReader().use {
@@ -78,10 +83,30 @@ class QuranRepositoryImp @Inject constructor(
             }
             quranFileResponseModel =
                 parseFromJson<QuranFileResponseModel>(quranText) ?: QuranFileResponseModel()
+            _cachedQuranData = quranFileResponseModel
         } catch (e: IOException) {
-            // Handle exceptions here
             e.printStackTrace()
         }
         return quranFileResponseModel
     }
+
+    override suspend fun searchAyas(context: Context, query: String): List<AyaModel> =
+        withContext(Dispatchers.IO) {
+            val normalizedQuery = query.trim()
+            if (normalizedQuery.length < 2) return@withContext emptyList()
+
+            val data = _cachedQuranData ?: getQuranData(context)
+            val results = mutableListOf<AyaModel>()
+
+            data.suras?.forEach { surah ->
+                surah.ayas?.forEach { aya ->
+                    val ayaSearchText = aya.aya_text ?: ""
+                    if (ayaSearchText.contains(normalizedQuery)) {
+                        results.add(aya.copy(surah = surah))
+                        if (results.size >= 30) return@withContext results
+                    }
+                }
+            }
+            results
+        }
 }

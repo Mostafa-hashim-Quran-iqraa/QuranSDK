@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.graphics.createBitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blacksmith.quranlib.R
@@ -22,7 +21,6 @@ import com.blacksmith.quranlib.data.model.LineModel
 import com.blacksmith.quranlib.data.model.QuranPageModel
 import com.blacksmith.quranlib.data.model.SurahModel
 import com.blacksmith.quranlib.data.model.WordModel
-import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.domain.remote.QuranRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +28,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import androidx.core.graphics.createBitmap
+import com.blacksmith.quranlib.data.util.QuranConstants
 
 @HiltViewModel
 class QuranViewModel @Inject constructor(
@@ -44,7 +44,6 @@ class QuranViewModel @Inject constructor(
         private set
     var quranPageModels = mutableStateListOf<QuranPageModel>()
         private set
-
     var pagesVersion = QuranConstants.PAGES_VERSION_2
 
     private val _typefaceCache = object : LinkedHashMap<String, Typeface>(
@@ -148,7 +147,6 @@ class QuranViewModel @Inject constructor(
     private fun fontFileNameForPage(page: Int): String {
 //        val p = page.toString().padStart(3, '0')
 //        return "QCF2$p.ttf"
-
         val p = if (pagesVersion == QuranConstants.PAGES_VERSION_2)
             page.toString().padStart(3, '0')
         else page.toString()

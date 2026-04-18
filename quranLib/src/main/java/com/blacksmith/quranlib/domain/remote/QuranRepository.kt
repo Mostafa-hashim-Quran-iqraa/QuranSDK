@@ -1,6 +1,7 @@
 package com.blacksmith.quranlib.domain.remote
 
 import android.content.Context
+import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.PageEntity
 import com.blacksmith.quranlib.data.model.QuranWordModel
 import com.blacksmith.quranlib.data.model.WordEntity
@@ -13,5 +14,7 @@ interface QuranRepository {
 
     suspend fun getPages(versionNumber: Int): List<PageEntity>
     suspend fun getWords(): List<WordEntity>
+
+    suspend fun searchAyas(context: Context, query: String): List<AyaModel>
 
 }

@@ -1,10 +1,9 @@
-package com.blacksmith.quranlib.presentation.newQuranScreen
+package com.blacksmith.quranlib.presentation.quranScreen
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Typeface
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -78,8 +77,9 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.PopupPositionProvider
 import com.blacksmith.quranlib.data.util.QuranConstants
+import com.blacksmith.quranlib.data.util.helper.measureWordWidth
+import com.blacksmith.quranlib.data.util.helper.toArabicNumber
 import com.blacksmith.quranlib.presentation.theme.red_light
-import kotlin.math.roundToInt
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 private const val WORD_GAP_PX = 1f
@@ -89,7 +89,7 @@ private const val MUSHAF_LINES_PER_PAGE = 16
 // QuranPageScreen — public entry point
 // =============================================================================
 @Composable
-fun QuranPageScreen(
+fun QuranPageCanvasModeScreen(
     viewModel: QuranViewModel = hiltViewModel(),
     quranPagesVersion: Int = QuranConstants.PAGES_VERSION_2,
     isReversePager: Boolean = false,
@@ -122,6 +122,14 @@ fun QuranPageScreen(
         viewModel.preloadFontsAround(context, pagerState.currentPage + 1, range = 3)
     }
 
+    LaunchedEffect(pageToOpen) {
+        if (pageToOpen > 0) {
+            val targetIndex = pageToOpen.coerceIn(1, 604) - 1
+            if (targetIndex != pagerState.currentPage) {
+                pagerState.animateScrollToPage(targetIndex)
+            }
+        }
+    }
     QuranContent(
         context = context,
         pagerState = pagerState,
@@ -251,8 +259,7 @@ private fun QuranPageItem(
     val pageNumber = remember(currentPage) { toArabicNumber(currentPage + 1) }
     val density = LocalDensity.current
 
-    @Suppress("UNUSED_VARIABLE")
-    val fontReady = viewModel.fontReadyState[currentPage + 1]
+    @Suppress("UNUSED_VARIABLE") val fontReady = viewModel.fontReadyState[currentPage + 1]
     val typeface = viewModel.getTypefaceForPage(context, currentPage + 1)
     val typefaceSuraName = viewModel.typefaceSuraName
     val suraHeaderBitmap = viewModel.getBitmap(context, R.drawable.surah_title)
@@ -277,7 +284,11 @@ private fun QuranPageItem(
                 fontFamily = amiri_quran,
                 textAlign = TextAlign.Center,
                 textDecoration = if (isJuzClickable) TextDecoration.Underline else TextDecoration.None,
-                modifier = Modifier.clickable { if (isJuzClickable) onClickJuzName(pageModel.chapterModel) },
+                modifier = Modifier.clickable {
+                    if (isJuzClickable) onClickJuzName(
+                        pageModel.chapterModel
+                    )
+                },
             )
             Text(
                 text = pageModel.surahModel.name_ar ?: "",
@@ -286,13 +297,15 @@ private fun QuranPageItem(
                 fontFamily = amiri_quran,
                 textAlign = TextAlign.Center,
                 textDecoration = if (isSurahClickable) TextDecoration.Underline else TextDecoration.None,
-                modifier = Modifier.clickable { if (isSurahClickable) onClickSurahName(pageModel.surahModel) },
+                modifier = Modifier.clickable {
+                    if (isSurahClickable) onClickSurahName(
+                        pageModel.surahModel
+                    )
+                },
             )
         }
 
-        if (typeface != null && typefaceSuraName != null &&
-            suraHeaderBitmap != null && basmalaBitmap != null
-        ) {
+        if (typeface != null && typefaceSuraName != null && suraHeaderBitmap != null && basmalaBitmap != null) {
             val textSizePx = with(density) { 20.dp.toPx() }
             val horizontalPaddingPx = with(density) { 10.dp.toPx() }
             CanvasQuranPage(
@@ -525,7 +538,8 @@ private fun CanvasQuranPage(
             ) {
                 QuranContextMenu(
                     onCopy = {
-                        val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val cb =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cb.setPrimaryClip(ClipData.newPlainText("quran", selectedText))
                         showContextMenu = false
                         selectedWord = null
@@ -602,7 +616,9 @@ private fun drawPageContent(
                     bitmapPaint.colorFilter = PorterDuffColorFilter(
                         suraHeaderColor.toArgb(), PorterDuff.Mode.SRC_IN,
                     )
-                    nativeCanvas.drawBitmap(suraHeaderBitmap, null, destRect, bitmapPaint)
+                    nativeCanvas.drawBitmap(
+                        suraHeaderBitmap, null, destRect, bitmapPaint
+                    )
 
                     val surahPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                         typeface = typefaceSuraName
@@ -610,8 +626,8 @@ private fun drawPageContent(
                         color = suraNameColor.toArgb()
                         textAlign = Paint.Align.CENTER
                     }
-                    val textY = destRect.top + destRect.height() / 2f -
-                            (surahPaint.descent() + surahPaint.ascent()) / 2f
+                    val textY =
+                        destRect.top + destRect.height() / 2f - (surahPaint.descent() + surahPaint.ascent()) / 2f
                     nativeCanvas.drawText(
                         line.surahLigature ?: "",
                         canvasWidth / 2f,
@@ -644,7 +660,9 @@ private fun drawPageContent(
 
                     val wordMetrics = Array(words.size) { i ->
                         val bounds = android.graphics.Rect()
-                        textPaint.getTextBounds(words[i].glyph, 0, words[i].glyph.length, bounds)
+                        textPaint.getTextBounds(
+                            words[i].glyph, 0, words[i].glyph.length, bounds
+                        )
                         val advance = measureWordWidth(textPaint, words[i].glyph)
                         val boundsRight = bounds.right.toFloat()
                         val visualWidth = if (boundsRight > advance * 3f) {
@@ -666,7 +684,8 @@ private fun drawPageContent(
                     }
 
                     val virtualWidth = canvasWidth / scaleX
-                    val xPositions = computeWordPositions(virtualWidth, line, textPaint, wordMetrics)
+                    val xPositions =
+                        computeWordPositions(virtualWidth, line, textPaint, wordMetrics)
 
                     nativeCanvas.save()
                     if (scaleX < 1f) {
@@ -681,13 +700,18 @@ private fun drawPageContent(
                                 if (word.ayah == selectedAyah && word.surahId == selectedSurah) {
                                     val vw = wordMetrics[i].first
                                     if (xPositions[i] < mergedLeft) mergedLeft = xPositions[i]
-                                    if (xPositions[i] + vw > mergedRight) mergedRight = xPositions[i] + vw
+                                    if (xPositions[i] + vw > mergedRight) mergedRight =
+                                        xPositions[i] + vw
                                 }
                             }
                             if (mergedLeft != Float.MAX_VALUE) {
                                 fillPaint.color = highlightColorArgb
                                 nativeCanvas.drawRect(
-                                    mergedLeft, lineTop, mergedRight, lineTop + lineHeight, fillPaint,
+                                    mergedLeft,
+                                    lineTop,
+                                    mergedRight,
+                                    lineTop + lineHeight,
+                                    fillPaint,
                                 )
                             }
                         }
@@ -710,15 +734,19 @@ private fun drawPageContent(
                     words.forEachIndexed { i, word ->
                         val x = xPositions[i]
                         val vw = wordMetrics[i].first
-                        val isAyahNum = word.wordText.isNotEmpty() &&
-                                word.wordText.all { it in '٠'..'٩' }
+                        val isAyahNum =
+                            word.wordText.isNotEmpty() && word.wordText.all { it in '٠'..'٩' }
                         if (isAyahNum) textPaint.color = ayahNumberColorArgb
                         nativeCanvas.drawText(word.glyph, x, baseline, textPaint)
                         if (isAyahNum) textPaint.color = fontColorArgb
 
                         val scaledLeft = canvasWidth - (canvasWidth - x) * scaleX
                         val scaledRight = canvasWidth - (canvasWidth - (x + vw)) * scaleX
-                        wordRectsOut.add(word to RectF(scaledLeft, lineTop, scaledRight, lineTop + lineHeight))
+                        wordRectsOut.add(
+                            word to RectF(
+                                scaledLeft, lineTop, scaledRight, lineTop + lineHeight
+                            )
+                        )
                     }
 
                     nativeCanvas.restore()
@@ -818,24 +846,3 @@ private fun QuranContextMenu(
         )
     }
 }
-
-// =============================================================================
-// Utilities
-// =============================================================================
-fun toArabicNumber(number: Int): String {
-    val arabicDigits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
-    return number.toString().map { arabicDigits[it - '0'] }.joinToString("")
-}
-
-fun measureWordWidth(textPaint: Paint, text: String): Float {
-    if (text.isEmpty()) return 0f
-    val widths = FloatArray(text.length)
-    textPaint.getTextWidths(text, widths)
-    return widths.sum()
-}
-
-fun Int.dpToPx(context: Context): Float =
-    this * context.resources.displayMetrics.density
-
-private fun String.isAyahNumber(): Boolean =
-    isNotEmpty() && all { it in '٠'..'٩' }

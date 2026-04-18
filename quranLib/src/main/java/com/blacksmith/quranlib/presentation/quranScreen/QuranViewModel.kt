@@ -153,6 +153,7 @@ class QuranViewModel @Inject constructor(
         return if (pagesVersion == QuranConstants.PAGES_VERSION_2) "QCF2$p.ttf" else "p$page.ttf"
     }
 
+
     // ─── Data loading ─────────────────────────────────────────────────────────
     fun getData(context: Context, versionNumber: Int) {
         pagesVersion = versionNumber

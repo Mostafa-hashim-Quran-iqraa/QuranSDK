@@ -8,16 +8,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.blacksmith.quranApp.presentation.base.BaseViewModel
 import com.blacksmith.quranlib.data.model.AyaModel
+import com.blacksmith.quranlib.data.model.JuzIndexItem
 import com.blacksmith.quranlib.data.util.QuranConstants
-import com.blacksmith.quranlib.domain.remote.QuranRepository
+import com.blacksmith.quranlib.data.useCase.QuranSearchUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 open class QuranViewModel @Inject constructor(
-    private val quranRepository: QuranRepository,
+    private val quranSearch: QuranSearchUseCase,
 ) : BaseViewModel() {
+
     var pageToOpen by mutableIntStateOf(0)
     var isAyaHighlight by mutableStateOf(false)
     var isEnableJuzClick by mutableStateOf(false)
@@ -32,7 +34,7 @@ open class QuranViewModel @Inject constructor(
     var isText by mutableStateOf(true)
     var quranPagesVersion by mutableIntStateOf(QuranConstants.PAGES_VERSION_2)
 
-    // ─── Search ───────────────────────────────────────────────────────────────
+    // ─── Search state ─────────────────────────────────────────────────────────
     var isSearchVisible by mutableStateOf(false)
         private set
     var searchQuery by mutableStateOf("")
@@ -41,9 +43,7 @@ open class QuranViewModel @Inject constructor(
     var isSearchLoading by mutableStateOf(false)
         private set
 
-    fun showSearch() {
-        isSearchVisible = true
-    }
+    fun showSearch() { isSearchVisible = true }
 
     fun hideSearch() {
         isSearchVisible = false
@@ -51,21 +51,41 @@ open class QuranViewModel @Inject constructor(
         searchResults = emptyList()
     }
 
-    fun clearSearchResults() {
-        searchResults = emptyList()
-    }
+    fun clearSearchResults() { searchResults = emptyList() }
 
     fun searchAyas(context: Context, query: String) {
         viewModelScope.launch {
             isSearchLoading = true
             searchResults = try {
-                quranRepository.searchAyas(context, query)
+                quranSearch.searchAyas(context, query)
             } catch (e: Exception) {
                 emptyList()
             }
             isSearchLoading = false
         }
     }
+
+    // ─── Juz index state ─────────────────────────────────────────────────────
+    var isIndexVisible by mutableStateOf(false)
+        private set
+    var juzIndex by mutableStateOf<List<JuzIndexItem>>(emptyList())
+        private set
+    var selectedJuzId by mutableIntStateOf(1)
+
+    fun showIndex(context: Context) {
+        isIndexVisible = true
+        if (juzIndex.isEmpty()) {
+            viewModelScope.launch {
+                juzIndex = try {
+                    quranSearch.getJuzIndex(context)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+        }
+    }
+
+    fun hideIndex() { isIndexVisible = false }
 
     fun onDispose() {}
 

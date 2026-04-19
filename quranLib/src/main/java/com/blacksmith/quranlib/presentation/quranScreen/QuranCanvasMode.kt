@@ -106,9 +106,10 @@ fun QuranPageCanvasModeScreen(
     pageToOpen: Int = 0,
     onClickJuzName: (ChapterModel) -> Unit = {},
     onClickSurahName: (SurahModel) -> Unit = {},
+    onWordLongPressed: (isAyaHighlight: Boolean, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit = { isAyaHighlight, wordModel, selectedWordRectInWindow, selectedAyah, selectedSurah, ayahWords -> },
+    onWordClicked: (WordModel) -> Unit = { wordModel -> },
 ) {
     val context = LocalContext.current
-
     ComposableLifecycle { _, event ->
         if (event == Lifecycle.Event.ON_START && !viewModel.isDataLoaded) {
             viewModel.getData(context, quranPagesVersion)
@@ -148,6 +149,8 @@ fun QuranPageCanvasModeScreen(
         isFontBold = isFontBold,
         onClickJuzName = onClickJuzName,
         onClickSurahName = onClickSurahName,
+        onWordLongPressed = onWordLongPressed,
+        onWordClicked = onWordClicked
     )
 }
 
@@ -173,6 +176,8 @@ private fun QuranContent(
     isFontBold: Boolean,
     onClickJuzName: (ChapterModel) -> Unit,
     onClickSurahName: (SurahModel) -> Unit,
+    onWordLongPressed: (isAyaHighlight: Boolean, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    onWordClicked: (WordModel) -> Unit,
 ) {
     Surface(color = pageBackground, modifier = Modifier.fillMaxSize()) {
         Box(
@@ -223,6 +228,8 @@ private fun QuranContent(
                                     isFontBold = isFontBold,
                                     onClickJuzName = onClickJuzName,
                                     onClickSurahName = onClickSurahName,
+                                    onWordLongPressed = onWordLongPressed,
+                                    onWordClicked = onWordClicked,
                                 )
                             } else {
                                 Box(modifier = Modifier.fillMaxSize())
@@ -254,6 +261,8 @@ private fun QuranPageItem(
     isFontBold: Boolean,
     onClickJuzName: (ChapterModel) -> Unit,
     onClickSurahName: (SurahModel) -> Unit,
+    onWordLongPressed: (isAyaHighlight: Boolean, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    onWordClicked: (WordModel) -> Unit,
 ) {
     val pageModel = remember(currentPage) { viewModel.quranPageModels[currentPage] }
     val pageNumber = remember(currentPage) { toArabicNumber(currentPage + 1) }
@@ -327,6 +336,8 @@ private fun QuranPageItem(
                 suraNameColor = suraNameColor,
                 isBold = isFontBold,
                 isAyaHighlight = isAyaHighlight,
+                onWordLongPressed = onWordLongPressed,
+                onWordClicked = onWordClicked,
             )
         } else {
             Box(
@@ -351,7 +362,7 @@ private fun QuranPageItem(
 // الـ Popup بيستدعي calculatePosition بعد ما يحسب حجمه الفعلي
 // =============================================================================
 @Stable
-private class WordMenuPositionProvider(
+class WordMenuPositionProvider(
     private val wordRectInWindow: android.graphics.RectF,
     private val menuMarginPx: Int,
     private val screenWidthPx: Int,
@@ -404,21 +415,17 @@ private fun CanvasQuranPage(
     suraNameColor: Color,
     isBold: Boolean,
     isAyaHighlight: Boolean,
+    onWordLongPressed: (isAyaHighlight: Boolean, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    onWordClicked: (WordModel) -> Unit,
 ) {
     var selectedWord by remember(pageModel) { mutableStateOf<WordModel?>(null) }
     var selectedAyah by remember(pageModel) { mutableStateOf<Int?>(null) }
     var selectedSurah by remember(pageModel) { mutableStateOf<Int?>(null) }
-    var showContextMenu by remember { mutableStateOf(false) }
-
     // موقع الكلمة المحددة في الـ window الحقيقي بالـ px
     var selectedWordRectInWindow by remember { mutableStateOf(RectF()) }
 
     // موقع الـ Canvas في الـ window
     var canvasWindowOffset by remember { mutableStateOf(Offset.Zero) }
-
-    val density = LocalDensity.current
-    val screenWidthPx = context.resources.displayMetrics.widthPixels
-    val menuMarginPx = with(density) { 6.dp.roundToPx() }
 
     val wordRects = remember(pageModel) { mutableListOf<Pair<WordModel, RectF>>() }
 
@@ -437,25 +444,6 @@ private fun CanvasQuranPage(
         pageModel.lines.flatMap { it.words }.groupBy { it.surahId to it.ayah }
     }
 
-    val selectedText = remember(selectedWord, selectedAyah, selectedSurah, isAyaHighlight) {
-        if (isAyaHighlight && selectedAyah != null) {
-            val ayahWords = wordsByAyah[selectedSurah to selectedAyah] ?: emptyList()
-            "${ayahWords.joinToString(" ") { it.wordText }}\nسورة ${ayahWords.firstOrNull()?.surahName} - آية $selectedAyah"
-        } else {
-            selectedWord?.let { "${it.wordText}\nسورة ${it.surahName} - آية ${it.ayah}" } ?: ""
-        }
-    }
-
-    // نبني الـ provider بناءً على موقع الكلمة الحالية
-    // بيتبنى من جديد بس لما selectedWordRectInWindow يتغير
-    val positionProvider = remember(selectedWordRectInWindow) {
-        WordMenuPositionProvider(
-            wordRectInWindow = selectedWordRectInWindow,
-            menuMarginPx = menuMarginPx,
-            screenWidthPx = screenWidthPx,
-        )
-    }
-
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Canvas(
             modifier = Modifier
@@ -466,11 +454,16 @@ private fun CanvasQuranPage(
                 }
                 .pointerInput(pageModel, isAyaHighlight) {
                     detectTapGestures(
-                        onTap = {
+                        onTap = { tapOffset ->
                             selectedWord = null
                             selectedAyah = null
                             selectedSurah = null
-                            showContextMenu = false
+                            val hit = wordRects.firstOrNull { (_, rect) ->
+                                rect.contains(tapOffset.x, tapOffset.y)
+                            }?.first
+                            if (hit != null) {
+                                onWordClicked(hit)
+                            }
                         },
                         onLongPress = { tapOffset ->
                             val hit = wordRects.firstOrNull { (_, rect) ->
@@ -497,7 +490,15 @@ private fun CanvasQuranPage(
                                         canvasWindowOffset.y + hitRect.bottom,
                                     )
                                 }
-                                showContextMenu = true
+                                onWordLongPressed(
+                                    isAyaHighlight,
+                                    hit,
+                                    selectedWordRectInWindow,
+                                    selectedAyah,
+                                    selectedSurah,
+                                    wordsByAyah[selectedSurah to selectedAyah] ?: emptyList()
+                                )
+//                                showContextMenu = true
                             }
                         },
                     )
@@ -526,37 +527,37 @@ private fun CanvasQuranPage(
             )
         }
 
-        if (showContextMenu && (selectedWord != null || selectedAyah != null)) {
-            Popup(
-                popupPositionProvider = positionProvider,
-                onDismissRequest = {
-                    showContextMenu = false
-                    selectedWord = null
-                    selectedAyah = null
-                },
-            ) {
-                QuranContextMenu(
-                    onCopy = {
-                        val cb =
-                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        cb.setPrimaryClip(ClipData.newPlainText("quran", selectedText))
-                        showContextMenu = false
-                        selectedWord = null
-                        selectedAyah = null
-                    },
-                    onShare = {
-                        val intent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, selectedText)
-                        }
-                        context.startActivity(Intent.createChooser(intent, null))
-                        showContextMenu = false
-                        selectedWord = null
-                        selectedAyah = null
-                    },
-                )
-            }
-        }
+        /* if (showContextMenu && (selectedWord != null || selectedAyah != null)) {
+             Popup(
+                 popupPositionProvider = positionProvider,
+                 onDismissRequest = {
+                     showContextMenu = false
+                     selectedWord = null
+                     selectedAyah = null
+                 },
+             ) {
+                 QuranContextMenu(
+                     onCopy = {
+                         val cb =
+                             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                         cb.setPrimaryClip(ClipData.newPlainText("quran", selectedText))
+                         showContextMenu = false
+                         selectedWord = null
+                         selectedAyah = null
+                     },
+                     onShare = {
+                         val intent = Intent(Intent.ACTION_SEND).apply {
+                             type = "text/plain"
+                             putExtra(Intent.EXTRA_TEXT, selectedText)
+                         }
+                         context.startActivity(Intent.createChooser(intent, null))
+                         showContextMenu = false
+                         selectedWord = null
+                         selectedAyah = null
+                     },
+                 )
+             }
+         }*/
     }
 }
 
@@ -792,32 +793,32 @@ private fun computeWordPositions(
     return positions
 }
 
-// =============================================================================
-// QuranContextMenu
-// =============================================================================
-@Composable
-private fun QuranContextMenu(
-    onCopy: () -> Unit,
-    onShare: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .background(White, shape = RoundedCornerShape(8.dp))
-            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-    ) {
-        Text(
-            text = "نسخ",
-            color = Black,
-            modifier = Modifier
-                .clickable(onClick = onCopy)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-        )
-        Text(
-            text = "مشاركة",
-            color = Black,
-            modifier = Modifier
-                .clickable(onClick = onShare)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-        )
-    }
-}
+//// =============================================================================
+//// QuranContextMenu
+//// =============================================================================
+//@Composable
+//private fun QuranContextMenu(
+//    onCopy: () -> Unit,
+//    onShare: () -> Unit,
+//) {
+//    Column(
+//        modifier = Modifier
+//            .background(White, shape = RoundedCornerShape(8.dp))
+//            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+//    ) {
+//        Text(
+//            text = "نسخ",
+//            color = Black,
+//            modifier = Modifier
+//                .clickable(onClick = onCopy)
+//                .padding(horizontal = 20.dp, vertical = 12.dp),
+//        )
+//        Text(
+//            text = "مشاركة",
+//            color = Black,
+//            modifier = Modifier
+//                .clickable(onClick = onShare)
+//                .padding(horizontal = 20.dp, vertical = 12.dp),
+//        )
+//    }
+//}

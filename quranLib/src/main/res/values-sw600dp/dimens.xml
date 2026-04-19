@@ -808,7 +808,7 @@
     <dimen name="screen_height_360">1440dp</dimen>
     <dimen name="screen_width_640">2560dp</dimen>
 
-    <!-- fonts-->
+    <!-- fontsPrint1421-->
     <dimen name="font_size_8">12sp</dimen>
     <dimen name="font_size_9">13.5sp</dimen>
     <dimen name="font_size_10">15sp</dimen>

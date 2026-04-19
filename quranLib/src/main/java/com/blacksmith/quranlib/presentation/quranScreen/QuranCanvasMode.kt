@@ -1,11 +1,8 @@
 package com.blacksmith.quranlib.presentation.quranScreen
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Typeface
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,10 +11,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +34,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import com.blacksmith.quranlib.R
@@ -57,7 +54,6 @@ import com.blacksmith.quranlib.presentation.theme.colorPrimary
 import com.blacksmith.quranlib.presentation.theme.colorPrimaryMoreLight
 import kotlin.math.abs
 
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.PorterDuff
@@ -104,10 +100,16 @@ fun QuranPageCanvasModeScreen(
     isJuzClickable: Boolean = false,
     isFontBold: Boolean = false,
     pageToOpen: Int = 0,
+    ayaNumberInSuraToHighlight: Int = -1,
+    surahIdToHighlight: Int = -1,
+    bookmarkedAyas: List<Pair<Int, Int>> = emptyList(),
+    bookmarkHighlightColor: Color = Color(0x550073C9),
     onClickJuzName: (ChapterModel) -> Unit = {},
     onClickSurahName: (SurahModel) -> Unit = {},
-    onWordLongPressed: (highlightType: Int, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit = { highlightType, wordModel, selectedWordRectInWindow, selectedAyah, selectedSurah, ayahWords -> },
-    onWordClicked: (WordModel) -> Unit = { wordModel -> },
+    // Last Int = page number (currentPage + 1) where the long-press happened
+    onWordLongPressed: (highlightType: Int, WordModel, RectF, Int?, List<WordModel>, Int) -> Unit = { _, _, _, _, _, _ -> },
+    onWordClicked: (WordModel) -> Unit = { _ -> },
+    onPageTap: () -> Unit = {},
 ) {
     val context = LocalContext.current
     ComposableLifecycle { _, event ->
@@ -126,6 +128,9 @@ fun QuranPageCanvasModeScreen(
     LaunchedEffect(pageToOpen) {
         if (pageToOpen > 0) {
             val targetIndex = pageToOpen.coerceIn(1, 604) - 1
+            // Start loading the target page's font proactively so it is ready
+            // (or loading) by the time the pager animation finishes.
+            viewModel.preloadFontsAround(context, pageToOpen, range = 1)
             if (targetIndex != pagerState.currentPage) {
                 pagerState.animateScrollToPage(targetIndex)
             }
@@ -142,6 +147,10 @@ fun QuranPageCanvasModeScreen(
         suraHeaderColor = suraHeaderColor,
         suraNameColor = suraNameColor,
         highlightColor = highlightColor,
+        ayaNumberInSuraToHighlight = ayaNumberInSuraToHighlight,
+        surahIdToHighlight = surahIdToHighlight,
+        bookmarkedAyas = bookmarkedAyas,
+        bookmarkHighlightColor = bookmarkHighlightColor,
         ayahNumberColor = ayahNumberColor,
         highlightType = highlightType,
         isSurahClickable = isSurahClickable,
@@ -150,7 +159,8 @@ fun QuranPageCanvasModeScreen(
         onClickJuzName = onClickJuzName,
         onClickSurahName = onClickSurahName,
         onWordLongPressed = onWordLongPressed,
-        onWordClicked = onWordClicked
+        onWordClicked = onWordClicked,
+        onPageTap = onPageTap,
     )
 }
 
@@ -169,6 +179,10 @@ private fun QuranContent(
     suraHeaderColor: Color,
     suraNameColor: Color,
     highlightColor: Color,
+    ayaNumberInSuraToHighlight: Int,
+    surahIdToHighlight: Int,
+    bookmarkedAyas: List<Pair<Int, Int>>,
+    bookmarkHighlightColor: Color,
     ayahNumberColor: Color,
     highlightType: Int,
     isSurahClickable: Boolean,
@@ -176,8 +190,9 @@ private fun QuranContent(
     isFontBold: Boolean,
     onClickJuzName: (ChapterModel) -> Unit,
     onClickSurahName: (SurahModel) -> Unit,
-    onWordLongPressed: (Int, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    onWordLongPressed: (Int, WordModel, RectF, Int?, List<WordModel>, Int) -> Unit,
     onWordClicked: (WordModel) -> Unit,
+    onPageTap: () -> Unit,
 ) {
     Surface(color = pageBackground, modifier = Modifier.fillMaxSize()) {
         Box(
@@ -221,6 +236,10 @@ private fun QuranContent(
                                     suraHeaderColor = suraHeaderColor,
                                     suraNameColor = suraNameColor,
                                     highlightColor = highlightColor,
+                                    ayaNumberInSuraToHighlight = ayaNumberInSuraToHighlight,
+                                    surahIdToHighlight = surahIdToHighlight,
+                                    bookmarkedAyas = bookmarkedAyas,
+                                    bookmarkHighlightColor = bookmarkHighlightColor,
                                     ayahNumberColor = ayahNumberColor,
                                     highlightType = highlightType,
                                     isSurahClickable = isSurahClickable,
@@ -230,6 +249,7 @@ private fun QuranContent(
                                     onClickSurahName = onClickSurahName,
                                     onWordLongPressed = onWordLongPressed,
                                     onWordClicked = onWordClicked,
+                                    onPageTap = onPageTap,
                                 )
                             } else {
                                 Box(modifier = Modifier.fillMaxSize())
@@ -254,6 +274,10 @@ private fun QuranPageItem(
     suraHeaderColor: Color,
     suraNameColor: Color,
     highlightColor: Color,
+    ayaNumberInSuraToHighlight: Int,
+    surahIdToHighlight: Int,
+    bookmarkedAyas: List<Pair<Int, Int>>,
+    bookmarkHighlightColor: Color,
     ayahNumberColor: Color,
     highlightType: Int,
     isSurahClickable: Boolean,
@@ -261,14 +285,20 @@ private fun QuranPageItem(
     isFontBold: Boolean,
     onClickJuzName: (ChapterModel) -> Unit,
     onClickSurahName: (SurahModel) -> Unit,
-    onWordLongPressed: (Int, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    onWordLongPressed: (Int, WordModel, RectF, Int?, List<WordModel>, Int) -> Unit,
     onWordClicked: (WordModel) -> Unit,
+    onPageTap: () -> Unit,
 ) {
     val pageModel = remember(currentPage) { viewModel.quranPageModels[currentPage] }
     val pageNumber = remember(currentPage) { toArabicNumber(currentPage + 1) }
     val density = LocalDensity.current
 
-    val typeface = viewModel.getTypefaceForPage(context, currentPage + 1)
+    // Track font readiness so the composable recomposes when the font finishes
+    // loading — without this, the page stays blank even after the font is ready.
+    val fontReady = viewModel.fontReadyState[currentPage + 1]
+    val typeface = remember(currentPage, fontReady) {
+        viewModel.getTypefaceForPage(context, currentPage + 1)
+    }
     val typefaceSuraName = viewModel.typefaceSuraName
     val suraHeaderBitmap = viewModel.getBitmap(context, R.drawable.surah_title)
     val basmalaBitmap = viewModel.getBitmap(context, R.drawable.basmala)
@@ -331,20 +361,39 @@ private fun QuranPageItem(
                 textSizePx = textSizePx,
                 fontColorArgb = fontColor.toArgb(),
                 highlightColorArgb = highlightColor.toArgb(),
+                ayaNumberInSuraToHighlight = ayaNumberInSuraToHighlight,
+                surahIdToHighlight = surahIdToHighlight,
+                bookmarkedAyaSet = remember(bookmarkedAyas) {
+                    bookmarkedAyas.mapTo(HashSet()) { (s, a) -> s.toLong() * 10_000L + a }
+                },
+                bookmarkHighlightColorArgb = bookmarkHighlightColor.toArgb(),
                 ayahNumberColorArgb = ayahNumberColor.toArgb(),
                 suraHeaderColor = suraHeaderColor,
                 suraNameColor = suraNameColor,
                 isBold = isFontBold,
                 highlightType = highlightType,
-                onWordLongPressed = onWordLongPressed,
+                // Wrap to inject the page number (1-based) into the callback
+                onWordLongPressed = { ht, wm, rect, ayah, words ->
+                    onWordLongPressed(ht, wm, rect, ayah, words, currentPage + 1)
+                },
                 onWordClicked = onWordClicked,
+                onPageTap = onPageTap,
             )
         } else {
+            // Font not ready yet — show a subtle loading indicator instead of
+            // leaving the page area blank/white.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    color = suraHeaderColor,
+                    modifier = Modifier.size(32.dp),
+                    strokeWidth = 2.dp,
+                )
+            }
         }
 
         Text(
@@ -353,44 +402,6 @@ private fun QuranPageItem(
             fontFamily = amiri_quran,
             fontSize = 14.toSP,
         )
-    }
-}
-
-// =============================================================================
-// WordMenuPositionProvider
-// بياخد موقع الكلمة في الـ window ويحسب موقع المنيو فوقها أو تحتها
-// الـ Popup بيستدعي calculatePosition بعد ما يحسب حجمه الفعلي
-// =============================================================================
-@Stable
-class WordMenuPositionProvider(
-    private val wordRectInWindow: android.graphics.RectF,
-    private val menuMarginPx: Int,
-    private val screenWidthPx: Int,
-) : PopupPositionProvider {
-    override fun calculatePosition(
-        anchorBounds: IntRect,
-        windowSize: IntSize,
-        layoutDirection: LayoutDirection,
-        popupContentSize: IntSize,
-    ): IntOffset {
-        val menuH = popupContentSize.height
-        val menuW = popupContentSize.width
-
-        val wordTop = wordRectInWindow.top.toInt()
-        val wordBottom = wordRectInWindow.bottom.toInt()
-        val wordLeft = wordRectInWindow.left.toInt()
-
-        // فوق الكلمة لو في مكان كافي، وإلا تحتها
-        val y = if (wordTop - menuH - menuMarginPx >= 0) {
-            wordTop - menuH - menuMarginPx
-        } else {
-            wordBottom + menuMarginPx
-        }
-
-        // X: نبدأ من يسار الكلمة مع تجنب الخروج من الشاشة
-        val x = wordLeft.coerceIn(0, (screenWidthPx - menuW).coerceAtLeast(0))
-
-        return IntOffset(x, y)
     }
 }
 
@@ -410,13 +421,18 @@ private fun CanvasQuranPage(
     textSizePx: Float,
     fontColorArgb: Int,
     highlightColorArgb: Int,
+    ayaNumberInSuraToHighlight: Int,
+    surahIdToHighlight: Int,
+    bookmarkedAyaSet: Set<Long>,
+    bookmarkHighlightColorArgb: Int,
     ayahNumberColorArgb: Int,
     suraHeaderColor: Color,
     suraNameColor: Color,
     isBold: Boolean,
     highlightType: Int,
-    onWordLongPressed: (Int, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    onWordLongPressed: (Int, WordModel, RectF, Int?, List<WordModel>) -> Unit,
     onWordClicked: (WordModel) -> Unit,
+    onPageTap: () -> Unit,
 ) {
     var selectedWord by remember(pageModel) { mutableStateOf<WordModel?>(null) }
     var selectedAyah by remember(pageModel) { mutableStateOf<Int?>(null) }
@@ -464,6 +480,9 @@ private fun CanvasQuranPage(
                             if (hit != null) {
                                 onWordClicked(hit)
                             }
+                            // Always notify so the host can clear any external highlight
+                            // (e.g. a search-result highlight) when the user taps the page.
+                            onPageTap()
                         },
                         onLongPress = { tapOffset ->
                             val hit = wordRects.firstOrNull { (_, rect) ->
@@ -495,7 +514,6 @@ private fun CanvasQuranPage(
                                     hit,
                                     selectedWordRectInWindow,
                                     selectedAyah,
-                                    selectedSurah,
                                     wordsByAyah[selectedSurah to selectedAyah] ?: emptyList()
                                 )
 //                                showContextMenu = true
@@ -516,6 +534,10 @@ private fun CanvasQuranPage(
                 textSizePx = textSizePx,
                 fontColorArgb = fontColorArgb,
                 highlightColorArgb = highlightColorArgb,
+                ayaNumberInSuraToHighlight = ayaNumberInSuraToHighlight,
+                surahIdToHighlight = surahIdToHighlight,
+                bookmarkedAyaSet = bookmarkedAyaSet,
+                bookmarkHighlightColorArgb = bookmarkHighlightColorArgb,
                 ayahNumberColorArgb = ayahNumberColorArgb,
                 suraHeaderColor = suraHeaderColor,
                 suraNameColor = suraNameColor,
@@ -540,6 +562,10 @@ private fun drawPageContent(
     textSizePx: Float,
     fontColorArgb: Int,
     highlightColorArgb: Int,
+    ayaNumberInSuraToHighlight: Int,
+    surahIdToHighlight: Int,
+    bookmarkedAyaSet: Set<Long>,
+    bookmarkHighlightColorArgb: Int,
     ayahNumberColorArgb: Int,
     suraHeaderColor: Color,
     suraNameColor: Color,
@@ -604,7 +630,7 @@ private fun drawPageContent(
                 LineModel.LINE_TYPE_BASMALAH -> {
                     val ratio = basmalaBitmap.width.toFloat() / basmalaBitmap.height
                     val drawH = lineHeight * 0.85f
-                    val drawW = (drawH * ratio).coerceAtMost(canvasWidth * 0.7f)
+                    val drawW = (drawH * ratio).coerceAtMost(canvasWidth * 0.8f)
                     val finalH = drawW / ratio
                     val drawLeft = (canvasWidth - drawW) / 2f
                     val drawTop = lineTop + (lineHeight - finalH) / 2f
@@ -657,7 +683,58 @@ private fun drawPageContent(
                         nativeCanvas.scale(scaleX, 1f, canvasWidth, baseline)
                     }
 
-                    if (highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA) {
+                    // ── Bookmark highlights (always visible, drawn first) ──────────────
+                    if (bookmarkedAyaSet.isNotEmpty()) {
+                        val bmGroups = mutableMapOf<Long, Pair<Float, Float>>()
+                        words.forEachIndexed { i, word ->
+                            val key = word.surahId.toLong() * 10_000L + word.ayah
+                            if (key in bookmarkedAyaSet) {
+                                val vw = wordMetrics[i].first
+                                val cur = bmGroups[key]
+                                bmGroups[key] = if (cur == null) {
+                                    xPositions[i] to xPositions[i] + vw
+                                } else {
+                                    minOf(cur.first, xPositions[i]) to
+                                            maxOf(cur.second, xPositions[i] + vw)
+                                }
+                            }
+                        }
+                        if (bmGroups.isNotEmpty()) {
+                            fillPaint.color = bookmarkHighlightColorArgb
+                            bmGroups.values.forEach { (l, r) ->
+                                nativeCanvas.drawRect(
+                                    l,
+                                    lineTop,
+                                    r,
+                                    lineTop + lineHeight,
+                                    fillPaint
+                                )
+                            }
+                        }
+                    }
+
+                    if (ayaNumberInSuraToHighlight != -1 && surahIdToHighlight != -1) {
+                        var mergedLeft = Float.MAX_VALUE
+                        var mergedRight = -Float.MAX_VALUE
+                        words.forEachIndexed { i, word ->
+                            if (word.ayah == ayaNumberInSuraToHighlight && word.surahId == surahIdToHighlight) {
+                                val vw = wordMetrics[i].first
+                                if (xPositions[i] < mergedLeft) mergedLeft = xPositions[i]
+                                if (xPositions[i] + vw > mergedRight) mergedRight =
+                                    xPositions[i] + vw
+                            }
+                        }
+                        if (mergedLeft != Float.MAX_VALUE) {
+                            fillPaint.color = highlightColorArgb
+                            nativeCanvas.drawRect(
+                                mergedLeft,
+                                lineTop,
+                                mergedRight,
+                                lineTop + lineHeight,
+                                fillPaint,
+                            )
+                        }
+                    } else if (highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA) {
                         if (selectedAyah != null && selectedSurah != null) {
                             var mergedLeft = Float.MAX_VALUE
                             var mergedRight = -Float.MAX_VALUE
@@ -761,32 +838,40 @@ private fun computeWordPositions(
     return positions
 }
 
-//// =============================================================================
-//// QuranContextMenu
-//// =============================================================================
-//@Composable
-//private fun QuranContextMenu(
-//    onCopy: () -> Unit,
-//    onShare: () -> Unit,
-//) {
-//    Column(
-//        modifier = Modifier
-//            .background(White, shape = RoundedCornerShape(8.dp))
-//            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
-//    ) {
-//        Text(
-//            text = "نسخ",
-//            color = Black,
-//            modifier = Modifier
-//                .clickable(onClick = onCopy)
-//                .padding(horizontal = 20.dp, vertical = 12.dp),
-//        )
-//        Text(
-//            text = "مشاركة",
-//            color = Black,
-//            modifier = Modifier
-//                .clickable(onClick = onShare)
-//                .padding(horizontal = 20.dp, vertical = 12.dp),
-//        )
-//    }
-//}
+// =============================================================================
+// WordMenuPositionProvider
+// بياخد موقع الكلمة في الـ window ويحسب موقع المنيو فوقها أو تحتها
+// الـ Popup بيستدعي calculatePosition بعد ما يحسب حجمه الفعلي
+// =============================================================================
+@Stable
+class WordMenuPositionProvider(
+    private val wordRectInWindow: android.graphics.RectF,
+    private val menuMarginPx: Int,
+    private val screenWidthPx: Int,
+) : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        val menuH = popupContentSize.height
+        val menuW = popupContentSize.width
+
+        val wordTop = wordRectInWindow.top.toInt()
+        val wordBottom = wordRectInWindow.bottom.toInt()
+        val wordLeft = wordRectInWindow.left.toInt()
+
+        // فوق الكلمة لو في مكان كافي، وإلا تحتها
+        val y = if (wordTop - menuH - menuMarginPx >= 0) {
+            wordTop - menuH - menuMarginPx
+        } else {
+            wordBottom + menuMarginPx
+        }
+
+        // X: نبدأ من يسار الكلمة مع تجنب الخروج من الشاشة
+        val x = wordLeft.coerceIn(0, (screenWidthPx - menuW).coerceAtLeast(0))
+
+        return IntOffset(x, y)
+    }
+}

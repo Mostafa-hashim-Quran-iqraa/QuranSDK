@@ -129,6 +129,9 @@ fun QuranPageTextModeScreen(
     LaunchedEffect(pageToOpen) {
         if (pageToOpen > 0) {
             val targetIndex = pageToOpen.coerceIn(1, 604) - 1
+            // Start loading the target page's font proactively so it is ready
+            // (or loading) by the time the pager animation finishes.
+            viewModel.preloadFontsAround(context, pageToOpen, range = 1)
             if (targetIndex != pagerState.currentPage) {
                 pagerState.animateScrollToPage(targetIndex)
             }

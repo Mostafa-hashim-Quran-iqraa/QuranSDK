@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
+import com.blacksmith.quranApp.data.model.BookmarkModel
+import com.blacksmith.quranApp.data.util.BookmarkManager
 import com.blacksmith.quranApp.presentation.base.BaseViewModel
 import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.JuzIndexItem
@@ -21,6 +23,8 @@ open class QuranViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     var pageToOpen by mutableIntStateOf(0)
+    var ayaNumberInSuraToHighlight by mutableIntStateOf(-1)
+    var surahIdToHighlight by mutableIntStateOf(-1)
     var highlightType by mutableIntStateOf(QuranConstants.HIGHLIGHT_TYPE_AYA)
     var isEnableJuzClick by mutableStateOf(false)
     var isEnableSuraClick by mutableStateOf(false)
@@ -32,6 +36,28 @@ open class QuranViewModel @Inject constructor(
     var highlightColor by mutableStateOf("")
     var bookmarkHighlightColor by mutableStateOf("")
     var ayahNumberColor by mutableStateOf("")
+
+    // ─── Bookmarks state ──────────────────────────────────────────────────────
+    var bookmarkedAyas by mutableStateOf<List<BookmarkModel>>(emptyList())
+        private set
+
+    fun loadBookmarks(context: Context) {
+        bookmarkedAyas = BookmarkManager.getBookmarks(context)
+    }
+
+    fun addBookmark(context: Context, bookmark: BookmarkModel) {
+        BookmarkManager.saveBookmark(context, bookmark)
+        bookmarkedAyas = BookmarkManager.getBookmarks(context)
+    }
+
+    fun removeBookmark(context: Context, surahId: Int, ayah: Int) {
+        BookmarkManager.removeBookmark(context, surahId, ayah)
+        bookmarkedAyas = BookmarkManager.getBookmarks(context)
+    }
+
+    fun isBookmarked(context: Context, surahId: Int, ayah: Int): Boolean =
+        BookmarkManager.isBookmarked(context, surahId, ayah)
+
     var quranPagesVersion by mutableIntStateOf(QuranConstants.VERSION_KING_FAHD_1421)
 
     // ─── Search state ─────────────────────────────────────────────────────────

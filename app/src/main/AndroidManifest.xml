@@ -33,6 +33,11 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.QuranApp"/>
+        <activity
+            android:name=".presentation.bookmarks.BookmarksActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.QuranApp"/>
     </application>
 
 </manifest>

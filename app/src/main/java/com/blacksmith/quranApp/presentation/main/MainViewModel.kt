@@ -156,6 +156,12 @@ open class MainViewModel @Inject constructor(
         }
     }
 
+    fun selectOnlyBookmarkHighlightColor(position: Int) {
+        for (i in bookmarkHighlightColors.indices) {
+            bookmarkHighlightColors[i] = bookmarkHighlightColors[i].copy(selected = i == position)
+        }
+    }
+
     fun selectOnlyAyaNumberColor(position: Int) {
         for (i in ayaNumberColors.indices) {
             ayaNumberColors[i] = ayaNumberColors[i].copy(selected = i == position)

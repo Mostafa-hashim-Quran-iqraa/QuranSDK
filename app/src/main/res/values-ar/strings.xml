@@ -26,4 +26,7 @@
     <string name="text">نص</string>
     <string name="images">صور</string>
     <string name="_4_colored">الملك فهد 1441 ملون</string>
+    <string name="bookmark_highlight_color">لون تحديد مرجعيات الآيات</string>
+    <string name="open_bookmarks">فتح المرجعيات</string>
+    <string name="bookmarks">المرجعيات</string>
 </resources>

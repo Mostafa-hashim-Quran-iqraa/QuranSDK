@@ -37,8 +37,15 @@ class QuranActivity :
         viewModel.surahTitleColor = intent.getStringExtra("selectedSurahTitleColor")?: "000000"
         //highlight color
         viewModel.highlightColor = intent.getStringExtra("selectedHighlightColor")?: "DBEBF7"
+        //bookmark highlight color
+        viewModel.bookmarkHighlightColor = intent.getStringExtra("selectedBookmarkHighlightColor")?: "550073C9"
         //ayah number color
         viewModel.ayahNumberColor = intent.getStringExtra("selectedAyahNumberColor")?: "000000"
+        // Navigate to a specific aya (from bookmarks or search)
+        val ayaIntent = intent.getIntExtra("ayaNumberInSuraToHighlight", -1)
+        if (ayaIntent != -1) viewModel.ayaNumberInSuraToHighlight = ayaIntent
+        val surahIntent = intent.getIntExtra("surahIdToHighlight", -1)
+        if (surahIntent != -1) viewModel.surahIdToHighlight = surahIntent
 
         Scaffold(
             modifier = Modifier

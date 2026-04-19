@@ -44,6 +44,7 @@ import com.blacksmith.quranApp.presentation.base.theme.fontNeoSansArabicRegular6
 import com.blacksmith.quranApp.presentation.base.theme.gray_200
 import com.blacksmith.quranApp.presentation.base.theme.gray_400
 import com.blacksmith.quranApp.presentation.base.theme.transparent
+import com.blacksmith.quranApp.presentation.bookmarks.BookmarksActivity
 import com.blacksmith.quranApp.presentation.quran.QuranActivity
 import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.data.util.helper.toSP
@@ -417,6 +418,52 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                     }
                 }
 
+            }
+
+            // ── Bookmark highlight color ──────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.toDP),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.bookmark_highlight_color),
+                    fontSize = 14.toSP,
+                    color = colorPrimary,
+                    fontFamily = fontNeoSansArabicRegular600,
+                )
+                LazyRow(
+                    modifier = Modifier.padding(top = 5.toDP),
+                    horizontalArrangement = Arrangement.spacedBy(10.toDP),
+                ) {
+                    items(count = viewModel.bookmarkHighlightColors.size) { pos ->
+                        Box(
+                            modifier = Modifier
+                                .size(40.toDP)
+                                .clip(RoundedCornerShape(8.toDP))
+                                .border(
+                                    width = if (viewModel.bookmarkHighlightColors[pos].selected) 2.toDP else 1.toDP,
+                                    color = if (viewModel.bookmarkHighlightColors[pos].selected) colorPrimary else gray_200,
+                                    shape = RoundedCornerShape(8.toDP),
+                                )
+                                .clickable { viewModel.selectOnlyBookmarkHighlightColor(pos) }
+                                .background(transparent)
+                                .padding(4.toDP),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(8.toDP))
+                                    .background(
+                                        Color(viewModel.bookmarkHighlightColors[pos].colorCode.toColorInt())
+                                    ),
+                            )
+                        }
+                    }
+                }
             }
 
             //select aya or word
@@ -870,6 +917,13 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                                         "selectedHighlightColor",
                                         selectedHighlightColor?.colorCode ?: "DBEBF7"
                                     )
+                                    //bookmark highlight color
+                                    val selectedBookmarkColor =
+                                        viewModel.bookmarkHighlightColors.firstOrNull { it.selected }
+                                    putExtra(
+                                        "selectedBookmarkHighlightColor",
+                                        selectedBookmarkColor?.colorCode ?: "550073C9"
+                                    )
                                 }
                             )
                         }
@@ -882,6 +936,62 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                     fontSize = 14.toSP,
                     color = White,
                     fontFamily = fontNeoSansArabicRegular600
+                )
+            }
+
+            // ── Open Bookmarks button ─────────────────────────────────────────────
+            Box(
+                modifier = Modifier
+                    .padding(top = 12.toDP)
+                    .fillMaxWidth()
+                    .height(50.toDP)
+                    .clip(RoundedCornerShape(16.toDP))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(color = gray_400),
+                        onClick = {
+                            val selectedBGColor =
+                                viewModel.bgColors.firstOrNull { it.selected }
+                            val selectedFontColor =
+                                viewModel.fontColors.firstOrNull { it.selected }
+                            val selectedSurahHeaderColor =
+                                viewModel.surahHeaderColors.firstOrNull { it.selected }
+                            val selectedSurahTitleColor =
+                                viewModel.surahTitleColors.firstOrNull { it.selected }
+                            val selectedAyaNumberColor =
+                                viewModel.ayaNumberColors.firstOrNull { it.selected }
+                            val selectedHighlightColor =
+                                viewModel.highlightColors.firstOrNull { it.selected }
+                            val selectedBookmarkColor =
+                                viewModel.bookmarkHighlightColors.firstOrNull { it.selected }
+
+                            (context as MainActivity).startActivity(
+                                Intent(context, BookmarksActivity::class.java).apply {
+                                    putExtra("highlightType",      viewModel.highlightType)
+                                    putExtra("isEnableJuzClick",   viewModel.isEnableJuzClick)
+                                    putExtra("isEnableSuraClick",  viewModel.isEnableSuraClick)
+                                    putExtra("isBoldFont",         viewModel.isBoldFont)
+                                    putExtra("quranPagesVersion",  viewModel.quranPagesVersion)
+                                    putExtra("selectedBGColor",             selectedBGColor?.colorCode           ?: "FDF8F2")
+                                    putExtra("selectedFontColor",           selectedFontColor?.colorCode         ?: "000000")
+                                    putExtra("selectedSurahHeaderColor",    selectedSurahHeaderColor?.colorCode  ?: "000000")
+                                    putExtra("selectedSurahTitleColor",     selectedSurahTitleColor?.colorCode   ?: "000000")
+                                    putExtra("selectedAyahNumberColor",     selectedAyaNumberColor?.colorCode    ?: "000000")
+                                    putExtra("selectedHighlightColor",      selectedHighlightColor?.colorCode    ?: "DBEBF7")
+                                    putExtra("selectedBookmarkHighlightColor", selectedBookmarkColor?.colorCode  ?: "550073C9")
+                                }
+                            )
+                        }
+                    )
+                    .border(2.toDP, colorPrimary, RoundedCornerShape(16.toDP))
+                    .background(White),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.open_bookmarks),
+                    fontSize = 14.toSP,
+                    color = colorPrimary,
+                    fontFamily = fontNeoSansArabicRegular600,
                 )
             }
         }

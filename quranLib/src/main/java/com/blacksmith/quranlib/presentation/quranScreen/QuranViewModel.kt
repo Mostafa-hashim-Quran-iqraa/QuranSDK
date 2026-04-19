@@ -131,14 +131,14 @@ class QuranViewModel @Inject constructor(
     }
 
     fun loadTypefaceFromAssets(context: Context, fontFileName: String): Typeface =
-//        Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
+//        Typeface.createFromAsset(context.assets, "fontsPrint1421/$fontFileName")
         if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421)
-            Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
+            Typeface.createFromAsset(context.assets, "fontsPrint1421/$fontFileName")
         else {
             if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1441)
-                Typeface.createFromAsset(context.assets, "fonts_v4_normal/$fontFileName")
+                Typeface.createFromAsset(context.assets, "fontsPrint1441Normal/$fontFileName")
             else
-                Typeface.createFromAsset(context.assets, "fonts_v4_colored/$fontFileName")
+                Typeface.createFromAsset(context.assets, "fontsPrint1441Colored/$fontFileName")
         }
 
     fun loadTypefaceFromRes(context: Context, fontResId: Int): Typeface? =

@@ -466,6 +466,52 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                 }
             }
 
+            // ── Error highlight color ─────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.toDP),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.error_highlight_color),
+                    fontSize = 14.toSP,
+                    color = colorPrimary,
+                    fontFamily = fontNeoSansArabicRegular600,
+                )
+                LazyRow(
+                    modifier = Modifier.padding(top = 5.toDP),
+                    horizontalArrangement = Arrangement.spacedBy(10.toDP),
+                ) {
+                    items(count = viewModel.errorHighlightColors.size) { pos ->
+                        Box(
+                            modifier = Modifier
+                                .size(40.toDP)
+                                .clip(RoundedCornerShape(8.toDP))
+                                .border(
+                                    width = if (viewModel.errorHighlightColors[pos].selected) 2.toDP else 1.toDP,
+                                    color = if (viewModel.errorHighlightColors[pos].selected) colorPrimary else gray_200,
+                                    shape = RoundedCornerShape(8.toDP),
+                                )
+                                .clickable { viewModel.selectOnlyErrorHighlightColor(pos) }
+                                .background(transparent)
+                                .padding(4.toDP),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(8.toDP))
+                                    .background(
+                                        Color(viewModel.errorHighlightColors[pos].colorCode.toColorInt())
+                                    ),
+                            )
+                        }
+                    }
+                }
+            }
+
             //select aya or word
             Column(
                 modifier = Modifier
@@ -924,6 +970,13 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                                         "selectedBookmarkHighlightColor",
                                         selectedBookmarkColor?.colorCode ?: "550073C9"
                                     )
+                                    //error highlight color
+                                    val selectedErrorColor =
+                                        viewModel.errorHighlightColors.firstOrNull { it.selected }
+                                    putExtra(
+                                        "selectedErrorHighlightColor",
+                                        selectedErrorColor?.colorCode ?: "#FFE53935"
+                                    )
                                 }
                             )
                         }
@@ -939,7 +992,7 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                 )
             }
 
-            // ── Open Bookmarks button ─────────────────────────────────────────────
+            // ── Open index button ─────────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .padding(top = 12.toDP)
@@ -967,18 +1020,45 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
 
                             (context as MainActivity).startActivity(
                                 Intent(context, BookmarksActivity::class.java).apply {
-                                    putExtra("highlightType",      viewModel.highlightType)
-                                    putExtra("isEnableJuzClick",   viewModel.isEnableJuzClick)
-                                    putExtra("isEnableSuraClick",  viewModel.isEnableSuraClick)
-                                    putExtra("isBoldFont",         viewModel.isBoldFont)
-                                    putExtra("quranPagesVersion",  viewModel.quranPagesVersion)
-                                    putExtra("selectedBGColor",             selectedBGColor?.colorCode           ?: "FDF8F2")
-                                    putExtra("selectedFontColor",           selectedFontColor?.colorCode         ?: "000000")
-                                    putExtra("selectedSurahHeaderColor",    selectedSurahHeaderColor?.colorCode  ?: "000000")
-                                    putExtra("selectedSurahTitleColor",     selectedSurahTitleColor?.colorCode   ?: "000000")
-                                    putExtra("selectedAyahNumberColor",     selectedAyaNumberColor?.colorCode    ?: "000000")
-                                    putExtra("selectedHighlightColor",      selectedHighlightColor?.colorCode    ?: "DBEBF7")
-                                    putExtra("selectedBookmarkHighlightColor", selectedBookmarkColor?.colorCode  ?: "550073C9")
+                                    putExtra("highlightType", viewModel.highlightType)
+                                    putExtra("isEnableJuzClick", viewModel.isEnableJuzClick)
+                                    putExtra("isEnableSuraClick", viewModel.isEnableSuraClick)
+                                    putExtra("isBoldFont", viewModel.isBoldFont)
+                                    putExtra("quranPagesVersion", viewModel.quranPagesVersion)
+                                    putExtra(
+                                        "selectedBGColor",
+                                        selectedBGColor?.colorCode ?: "FDF8F2"
+                                    )
+                                    putExtra(
+                                        "selectedFontColor",
+                                        selectedFontColor?.colorCode ?: "000000"
+                                    )
+                                    putExtra(
+                                        "selectedSurahHeaderColor",
+                                        selectedSurahHeaderColor?.colorCode ?: "000000"
+                                    )
+                                    putExtra(
+                                        "selectedSurahTitleColor",
+                                        selectedSurahTitleColor?.colorCode ?: "000000"
+                                    )
+                                    putExtra(
+                                        "selectedAyahNumberColor",
+                                        selectedAyaNumberColor?.colorCode ?: "000000"
+                                    )
+                                    putExtra(
+                                        "selectedHighlightColor",
+                                        selectedHighlightColor?.colorCode ?: "DBEBF7"
+                                    )
+                                    putExtra(
+                                        "selectedBookmarkHighlightColor",
+                                        selectedBookmarkColor?.colorCode ?: "550073C9"
+                                    )
+                                    val selectedErrorColor =
+                                        viewModel.errorHighlightColors.firstOrNull { it.selected }
+                                    putExtra(
+                                        "selectedErrorHighlightColor",
+                                        selectedErrorColor?.colorCode ?: "#FFE53935"
+                                    )
                                 }
                             )
                         }
@@ -988,7 +1068,7 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = stringResource(R.string.open_bookmarks),
+                    text = stringResource(R.string.open_quran_index),
                     fontSize = 14.toSP,
                     color = colorPrimary,
                     fontFamily = fontNeoSansArabicRegular600,

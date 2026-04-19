@@ -7,7 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.blacksmith.quranApp.data.model.BookmarkModel
+import com.blacksmith.quranApp.data.model.WordErrorModel
 import com.blacksmith.quranApp.data.util.BookmarkManager
+import com.blacksmith.quranApp.data.util.WordErrorManager
 import com.blacksmith.quranApp.presentation.base.BaseViewModel
 import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.JuzIndexItem
@@ -35,6 +37,7 @@ open class QuranViewModel @Inject constructor(
     var surahTitleColor by mutableStateOf("")
     var highlightColor by mutableStateOf("")
     var bookmarkHighlightColor by mutableStateOf("")
+    var errorHighlightColor by mutableStateOf("")
     var ayahNumberColor by mutableStateOf("")
 
     // ─── Bookmarks state ──────────────────────────────────────────────────────
@@ -57,6 +60,27 @@ open class QuranViewModel @Inject constructor(
 
     fun isBookmarked(context: Context, surahId: Int, ayah: Int): Boolean =
         BookmarkManager.isBookmarked(context, surahId, ayah)
+
+    // ─── Error words state ────────────────────────────────────────────────────
+    var errorWords by mutableStateOf<List<WordErrorModel>>(emptyList())
+        private set
+
+    fun loadErrorWords(context: Context) {
+        errorWords = WordErrorManager.getErrorWords(context)
+    }
+
+    fun addErrorWord(context: Context, word: WordErrorModel) {
+        WordErrorManager.saveErrorWord(context, word)
+        errorWords = WordErrorManager.getErrorWords(context)
+    }
+
+    fun removeErrorWord(context: Context, location: String) {
+        WordErrorManager.removeErrorWord(context, location)
+        errorWords = WordErrorManager.getErrorWords(context)
+    }
+
+    fun isErrorWord(context: Context, location: String): Boolean =
+        WordErrorManager.isErrorWord(context, location)
 
     var quranPagesVersion by mutableIntStateOf(QuranConstants.VERSION_KING_FAHD_1421)
 

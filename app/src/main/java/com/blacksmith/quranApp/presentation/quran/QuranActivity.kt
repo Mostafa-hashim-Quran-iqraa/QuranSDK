@@ -39,6 +39,8 @@ class QuranActivity :
         viewModel.highlightColor = intent.getStringExtra("selectedHighlightColor")?: "DBEBF7"
         //bookmark highlight color
         viewModel.bookmarkHighlightColor = intent.getStringExtra("selectedBookmarkHighlightColor")?: "550073C9"
+        //error highlight color
+        viewModel.errorHighlightColor = intent.getStringExtra("selectedErrorHighlightColor")?: "#FFE53935"
         //ayah number color
         viewModel.ayahNumberColor = intent.getStringExtra("selectedAyahNumberColor")?: "000000"
         // Navigate to a specific aya (from bookmarks or search)

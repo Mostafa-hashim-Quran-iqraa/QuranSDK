@@ -16,6 +16,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -41,6 +43,12 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +72,9 @@ import androidx.core.graphics.toColorInt
 import androidx.lifecycle.Lifecycle
 import com.blacksmith.quranApp.R
 import com.blacksmith.quranApp.data.model.BookmarkModel
+import com.blacksmith.quranApp.data.model.WordErrorModel
 import com.blacksmith.quranApp.presentation.base.theme.gray_400
+import com.blacksmith.quranApp.presentation.bookmarks.ErrorWordBottomSheet
 import com.blacksmith.quranlib.data.model.WordModel
 import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.data.util.component.ComposableLifecycle
@@ -82,9 +92,9 @@ fun QuranScreen(viewModel: QuranViewModel) {
     ComposableLifecycle { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                // Reload bookmarks each time the screen resumes (covers return from
-                // BookmarksActivity where the user might have deleted entries).
+                // Reload bookmarks and error words each time the screen resumes.
                 viewModel.loadBookmarks(context)
+                viewModel.loadErrorWords(context)
             }
 
             Lifecycle.Event.ON_STOP -> {
@@ -223,6 +233,9 @@ fun Content(
                 var selectedPage by remember { mutableStateOf(0) }
                 var showContextMenu by remember { mutableStateOf(false) }
                 var selectedWordRectInWindow by remember { mutableStateOf(RectF()) }
+                // Error word bottom sheet
+                var errorSheetWord by remember { mutableStateOf<WordErrorModel?>(null) }
+                var showErrorSheet by remember { mutableStateOf(false) }
                 val wordsByAyah = remember {
                     mutableStateListOf<WordModel>()
                 }
@@ -266,6 +279,10 @@ fun Content(
                 val bookmarkedAyaKeys = remember(viewModel.bookmarkedAyas) {
                     viewModel.bookmarkedAyas.map { it.surahId to it.ayah }
                 }
+                // Error word locations for canvas rendering
+                val errorWordLocations = remember(viewModel.errorWords) {
+                    viewModel.errorWords.mapTo(HashSet<String>()) { it.location }
+                }
 
                 QuranPageCanvasModeScreen(
                     isReversePager = !viewModel.isArabicLocale(),
@@ -280,6 +297,12 @@ fun Content(
                     bookmarkHighlightColor = Color(
                         viewModel.bookmarkHighlightColor.let {
                             if (it.isBlank()) "#550073C9" else it
+                        }.toColorInt()
+                    ),
+                    errorWordLocations = errorWordLocations,
+                    errorHighlightColor = Color(
+                        viewModel.errorHighlightColor.let {
+                            if (it.isBlank()) "#FFE53935" else it
                         }.toColorInt()
                     ),
                     pageBackground = bgColor,
@@ -308,16 +331,24 @@ fun Content(
                         selectedWordRectInWindow = wordRectInWindow
                         showContextMenu = true
                     },
-                    onWordClicked = { wordModel ->
+                    onWordClicked = { wordModel, page ->
                         // Clear search-result highlight on any word tap.
                         viewModel.ayaNumberInSuraToHighlight = -1
                         viewModel.surahIdToHighlight = -1
                         showContextMenu = false
-                        Toast.makeText(
-                            context,
-                            "تم الضغط على كلمة: ${wordModel.wordText} سورة ${wordModel.surahName} - آية ${wordModel.ayah}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        // If the word is flagged as an error → show bottom sheet
+                        val errorEntry =
+                            viewModel.errorWords.firstOrNull { it.location == wordModel.location }
+                        if (errorEntry != null) {
+                            errorSheetWord = errorEntry
+                            showErrorSheet = true
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "تم الضغط على كلمة: ${wordModel.wordText} سورة ${wordModel.surahName} - آية ${wordModel.ayah}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     },
                     onPageTap = {
                         // Tapping empty space clears any search-result highlight.
@@ -333,9 +364,11 @@ fun Content(
                             selectedWord = null
                             selectedAyahId = null
                         },
-                    ) {
+                    )
+                    {
                         QuranContextMenu(
                             isBookmarked = isCurrentBookmarked,
+                            isWordMode = viewModel.highlightType == QuranConstants.HIGHLIGHT_TYPE_WORD,
                             onCopy = {
                                 val cb =
                                     context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -391,8 +424,41 @@ fun Content(
                                 selectedWord = null
                                 selectedAyahId = null
                             },
+                            onMarkError = {
+                                val word = selectedWord
+                                val loc = word?.location
+                                if (word != null && loc != null) {
+                                    viewModel.addErrorWord(
+                                        context,
+                                        WordErrorModel(
+                                            location = loc,
+                                            wordText = word.wordText,
+                                            surahId = word.surahId,
+                                            surahName = word.surahName,
+                                            ayah = word.ayah,
+                                            page = selectedPage,
+                                        )
+                                    )
+                                    Toast.makeText(context, "تم تحديد خطأ حفظ", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                                showContextMenu = false
+                                selectedWord = null
+                                selectedAyahId = null
+                            },
                         )
                     }
+                }
+
+                // Error word bottom sheet
+                if (showErrorSheet && errorSheetWord != null) {
+                    ErrorWordBottomSheet (
+                        word = errorSheetWord!!,
+                        onDismiss = {
+                            showErrorSheet = false
+                            errorSheetWord = null
+                        },
+                    )
                 }
 
                 // نتائج البحث فوق صفحة القرآن
@@ -497,40 +563,64 @@ private fun SearchBar(
 @Composable
 private fun QuranContextMenu(
     isBookmarked: Boolean,
+    isWordMode: Boolean,
     onCopy: () -> Unit,
     onShare: () -> Unit,
     onBookmark: () -> Unit,
+    onMarkError: () -> Unit,
 ) {
     Column(
         modifier = Modifier
+            .width(IntrinsicSize.Min)
             .background(White, shape = RoundedCornerShape(8.dp))
             .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
     ) {
         Text(
+            text = "استماع للآية",
+            color = Black,
+            modifier = Modifier
+                .wrapContentWidth()
+                .clickable(onClick = {})
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+        )
+        HorizontalDivider(color = Color(0xFFEEEEEE))
+        Text(
             text = "نسخ",
             color = Black,
             modifier = Modifier
-                .wrapContentSize()
+                .wrapContentWidth()
                 .clickable(onClick = onCopy)
                 .padding(horizontal = 20.dp, vertical = 12.dp),
         )
-        androidx.compose.material3.HorizontalDivider(color = Color(0xFFEEEEEE))
+        HorizontalDivider(color = Color(0xFFEEEEEE))
         Text(
             text = "مشاركة",
             color = Black,
             modifier = Modifier
-                .wrapContentSize()
+                .wrapContentWidth()
                 .clickable(onClick = onShare)
                 .padding(horizontal = 20.dp, vertical = 12.dp),
         )
-        androidx.compose.material3.HorizontalDivider(color = Color(0xFFEEEEEE))
+        HorizontalDivider(color = Color(0xFFEEEEEE))
         Text(
             text = if (isBookmarked) "إزالة من المرجعيات" else "إضافة للمرجعيات",
             color = if (isBookmarked) Color(0xFFE57373) else Black,
             modifier = Modifier
-                .wrapContentSize()
+                .wrapContentWidth()
                 .clickable(onClick = onBookmark)
                 .padding(horizontal = 20.dp, vertical = 12.dp),
         )
+        if (isWordMode) {
+            HorizontalDivider(color = Color(0xFFEEEEEE))
+            Text(
+                text = "تحديد خطأ",
+                color = Color(0xFFE53935),
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .clickable(onClick = onMarkError)
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+            )
+        }
     }
 }
+

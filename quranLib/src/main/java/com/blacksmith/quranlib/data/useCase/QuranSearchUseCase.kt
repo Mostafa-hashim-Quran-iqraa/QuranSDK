@@ -3,6 +3,7 @@ package com.blacksmith.quranlib.data.useCase
 import android.content.Context
 import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.JuzIndexItem
+import com.blacksmith.quranlib.data.model.SurahListItem
 import com.blacksmith.quranlib.domain.remote.QuranRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,4 +26,8 @@ class QuranSearchUseCase @Inject constructor(
      */
     suspend fun getJuzIndex(context: Context): List<JuzIndexItem> =
         repository.getJuzIndexWithSurasInsideJuz(context)
+
+    /** Returns all 114 Surahs as a flat sorted list. */
+    suspend fun getSurahList(context: Context): List<SurahListItem> =
+        repository.getSurahList(context)
 }

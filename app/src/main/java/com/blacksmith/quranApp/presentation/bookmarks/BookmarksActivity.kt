@@ -22,25 +22,26 @@ class BookmarksActivity :
     override fun DoCreate() {
         // Receive the same color config as QuranActivity so we can pass it on
         val bookmarkHighlightColor = intent.getStringExtra("selectedBookmarkHighlightColor") ?: "550073C9"
-        val bgColor               = intent.getStringExtra("selectedBGColor")               ?: "FDF8F2"
-        val fontColor             = intent.getStringExtra("selectedFontColor")             ?: "000000"
-        val surahHeaderColor      = intent.getStringExtra("selectedSurahHeaderColor")      ?: "000000"
-        val surahTitleColor       = intent.getStringExtra("selectedSurahTitleColor")       ?: "000000"
-        val highlightColor        = intent.getStringExtra("selectedHighlightColor")        ?: "DBEBF7"
-        val ayahNumberColor       = intent.getStringExtra("selectedAyahNumberColor")       ?: "000000"
-        val isBoldFont            = intent.getBooleanExtra("isBoldFont",           true)
-        val quranPagesVersion     = intent.getIntExtra("quranPagesVersion",         QuranConstants.VERSION_KING_FAHD_1421)
-        val highlightType         = intent.getIntExtra("highlightType",             QuranConstants.HIGHLIGHT_TYPE_AYA)
-        val isEnableJuzClick      = intent.getBooleanExtra("isEnableJuzClick",      false)
-        val isEnableSuraClick     = intent.getBooleanExtra("isEnableSuraClick",     false)
+        val errorHighlightColor    = intent.getStringExtra("selectedErrorHighlightColor")    ?: "#FFE53935"
+        val bgColor                = intent.getStringExtra("selectedBGColor")                ?: "FDF8F2"
+        val fontColor              = intent.getStringExtra("selectedFontColor")              ?: "000000"
+        val surahHeaderColor       = intent.getStringExtra("selectedSurahHeaderColor")       ?: "000000"
+        val surahTitleColor        = intent.getStringExtra("selectedSurahTitleColor")        ?: "000000"
+        val highlightColor         = intent.getStringExtra("selectedHighlightColor")         ?: "DBEBF7"
+        val ayahNumberColor        = intent.getStringExtra("selectedAyahNumberColor")        ?: "000000"
+        val isBoldFont             = intent.getBooleanExtra("isBoldFont",           true)
+        val quranPagesVersion      = intent.getIntExtra("quranPagesVersion",         QuranConstants.VERSION_KING_FAHD_1421)
+        val highlightType          = intent.getIntExtra("highlightType",             QuranConstants.HIGHLIGHT_TYPE_AYA)
+        val isEnableJuzClick       = intent.getBooleanExtra("isEnableJuzClick",      false)
+        val isEnableSuraClick      = intent.getBooleanExtra("isEnableSuraClick",     false)
 
         Surface(color = White, modifier = Modifier.fillMaxSize()) {
             BookmarksScreen(
                 viewModel = viewModel,
-                onItemClick = { bookmark ->
+                onNavigateTo = { page, ayaNumber, surahId ->
                     startActivity(
                         Intent(this, QuranActivity::class.java).apply {
-                            putExtra("pageToOpen",                    bookmark.page)
+                            putExtra("pageToOpen",                    page)
                             putExtra("highlightType",                 highlightType)
                             putExtra("isEnableJuzClick",              isEnableJuzClick)
                             putExtra("isEnableSuraClick",             isEnableSuraClick)
@@ -53,9 +54,9 @@ class BookmarksActivity :
                             putExtra("selectedHighlightColor",        highlightColor)
                             putExtra("selectedAyahNumberColor",       ayahNumberColor)
                             putExtra("selectedBookmarkHighlightColor", bookmarkHighlightColor)
-                            // Navigate directly to the bookmarked aya
-                            putExtra("ayaNumberInSuraToHighlight",    bookmark.ayah)
-                            putExtra("surahIdToHighlight",            bookmark.surahId)
+                            putExtra("selectedErrorHighlightColor",   errorHighlightColor)
+                            if (ayaNumber != -1) putExtra("ayaNumberInSuraToHighlight", ayaNumber)
+                            if (surahId   != -1) putExtra("surahIdToHighlight",          surahId)
                         }
                     )
                 },

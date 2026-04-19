@@ -104,11 +104,14 @@ fun QuranPageCanvasModeScreen(
     surahIdToHighlight: Int = -1,
     bookmarkedAyas: List<Pair<Int, Int>> = emptyList(),
     bookmarkHighlightColor: Color = Color(0x550073C9),
+    errorWordLocations: Set<String> = emptySet(),
+    errorHighlightColor: Color = Color(0xFFE53935),
     onClickJuzName: (ChapterModel) -> Unit = {},
     onClickSurahName: (SurahModel) -> Unit = {},
     // Last Int = page number (currentPage + 1) where the long-press happened
     onWordLongPressed: (highlightType: Int, WordModel, RectF, Int?, List<WordModel>, Int) -> Unit = { _, _, _, _, _, _ -> },
-    onWordClicked: (WordModel) -> Unit = { _ -> },
+    // Last Int = page number (1-based) where the click happened
+    onWordClicked: (WordModel, Int) -> Unit = { _, _ -> },
     onPageTap: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -151,6 +154,8 @@ fun QuranPageCanvasModeScreen(
         surahIdToHighlight = surahIdToHighlight,
         bookmarkedAyas = bookmarkedAyas,
         bookmarkHighlightColor = bookmarkHighlightColor,
+        errorWordLocations = errorWordLocations,
+        errorHighlightColor = errorHighlightColor,
         ayahNumberColor = ayahNumberColor,
         highlightType = highlightType,
         isSurahClickable = isSurahClickable,
@@ -183,6 +188,8 @@ private fun QuranContent(
     surahIdToHighlight: Int,
     bookmarkedAyas: List<Pair<Int, Int>>,
     bookmarkHighlightColor: Color,
+    errorWordLocations: Set<String>,
+    errorHighlightColor: Color,
     ayahNumberColor: Color,
     highlightType: Int,
     isSurahClickable: Boolean,
@@ -191,7 +198,7 @@ private fun QuranContent(
     onClickJuzName: (ChapterModel) -> Unit,
     onClickSurahName: (SurahModel) -> Unit,
     onWordLongPressed: (Int, WordModel, RectF, Int?, List<WordModel>, Int) -> Unit,
-    onWordClicked: (WordModel) -> Unit,
+    onWordClicked: (WordModel, Int) -> Unit,
     onPageTap: () -> Unit,
 ) {
     Surface(color = pageBackground, modifier = Modifier.fillMaxSize()) {
@@ -240,6 +247,8 @@ private fun QuranContent(
                                     surahIdToHighlight = surahIdToHighlight,
                                     bookmarkedAyas = bookmarkedAyas,
                                     bookmarkHighlightColor = bookmarkHighlightColor,
+                                    errorWordLocations = errorWordLocations,
+                                    errorHighlightColor = errorHighlightColor,
                                     ayahNumberColor = ayahNumberColor,
                                     highlightType = highlightType,
                                     isSurahClickable = isSurahClickable,
@@ -278,6 +287,8 @@ private fun QuranPageItem(
     surahIdToHighlight: Int,
     bookmarkedAyas: List<Pair<Int, Int>>,
     bookmarkHighlightColor: Color,
+    errorWordLocations: Set<String>,
+    errorHighlightColor: Color,
     ayahNumberColor: Color,
     highlightType: Int,
     isSurahClickable: Boolean,
@@ -286,7 +297,7 @@ private fun QuranPageItem(
     onClickJuzName: (ChapterModel) -> Unit,
     onClickSurahName: (SurahModel) -> Unit,
     onWordLongPressed: (Int, WordModel, RectF, Int?, List<WordModel>, Int) -> Unit,
-    onWordClicked: (WordModel) -> Unit,
+    onWordClicked: (WordModel, Int) -> Unit,
     onPageTap: () -> Unit,
 ) {
     val pageModel = remember(currentPage) { viewModel.quranPageModels[currentPage] }
@@ -367,16 +378,18 @@ private fun QuranPageItem(
                     bookmarkedAyas.mapTo(HashSet()) { (s, a) -> s.toLong() * 10_000L + a }
                 },
                 bookmarkHighlightColorArgb = bookmarkHighlightColor.toArgb(),
+                errorWordLocations = errorWordLocations,
+                errorHighlightColorArgb = errorHighlightColor.toArgb(),
                 ayahNumberColorArgb = ayahNumberColor.toArgb(),
                 suraHeaderColor = suraHeaderColor,
                 suraNameColor = suraNameColor,
                 isBold = isFontBold,
                 highlightType = highlightType,
-                // Wrap to inject the page number (1-based) into the callback
+                // Wrap to inject the page number (1-based) into the callbacks
                 onWordLongPressed = { ht, wm, rect, ayah, words ->
                     onWordLongPressed(ht, wm, rect, ayah, words, currentPage + 1)
                 },
-                onWordClicked = onWordClicked,
+                onWordClicked = { wm -> onWordClicked(wm, currentPage + 1) },
                 onPageTap = onPageTap,
             )
         } else {
@@ -425,6 +438,8 @@ private fun CanvasQuranPage(
     surahIdToHighlight: Int,
     bookmarkedAyaSet: Set<Long>,
     bookmarkHighlightColorArgb: Int,
+    errorWordLocations: Set<String>,
+    errorHighlightColorArgb: Int,
     ayahNumberColorArgb: Int,
     suraHeaderColor: Color,
     suraNameColor: Color,
@@ -538,6 +553,8 @@ private fun CanvasQuranPage(
                 surahIdToHighlight = surahIdToHighlight,
                 bookmarkedAyaSet = bookmarkedAyaSet,
                 bookmarkHighlightColorArgb = bookmarkHighlightColorArgb,
+                errorWordLocations = errorWordLocations,
+                errorHighlightColorArgb = errorHighlightColorArgb,
                 ayahNumberColorArgb = ayahNumberColorArgb,
                 suraHeaderColor = suraHeaderColor,
                 suraNameColor = suraNameColor,
@@ -566,6 +583,8 @@ private fun drawPageContent(
     surahIdToHighlight: Int,
     bookmarkedAyaSet: Set<Long>,
     bookmarkHighlightColorArgb: Int,
+    errorWordLocations: Set<String>,
+    errorHighlightColorArgb: Int,
     ayahNumberColorArgb: Int,
     suraHeaderColor: Color,
     suraNameColor: Color,
@@ -778,9 +797,14 @@ private fun drawPageContent(
                         val vw = wordMetrics[i].first
                         val isAyahNum =
                             word.wordText.isNotEmpty() && word.wordText.all { it in '٠'..'٩' }
-                        if (isAyahNum) textPaint.color = ayahNumberColorArgb
+                        val isErrorWord = errorWordLocations.isNotEmpty() &&
+                                word.location in errorWordLocations
+                        when {
+                            isAyahNum   -> textPaint.color = ayahNumberColorArgb
+                            isErrorWord -> textPaint.color = errorHighlightColorArgb
+                        }
                         nativeCanvas.drawText(word.glyph, x, baseline, textPaint)
-                        if (isAyahNum) textPaint.color = fontColorArgb
+                        if (isAyahNum || isErrorWord) textPaint.color = fontColorArgb
 
                         val scaledLeft = canvasWidth - (canvasWidth - x) * scaleX
                         val scaledRight = canvasWidth - (canvasWidth - (x + vw)) * scaleX

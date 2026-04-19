@@ -21,6 +21,7 @@ open class MainViewModel @Inject constructor(
     var fontColors = mutableStateListOf<ColorModel>()
     var highlightColors = mutableStateListOf<ColorModel>()
     var bookmarkHighlightColors = mutableStateListOf<ColorModel>()
+    var errorHighlightColors = mutableStateListOf<ColorModel>()
     var ayaNumberColors = mutableStateListOf<ColorModel>()
     var pageToOpen by mutableIntStateOf(1)
     var highlightType by mutableIntStateOf(QuranConstants.HIGHLIGHT_TYPE_AYA)
@@ -37,6 +38,7 @@ open class MainViewModel @Inject constructor(
         initFontColorList()
         initHighlightColorList()
         initBookmarkHighlightColorList()
+        initErrorHighlightColorList()
         ayaNumberColorList()
     }
 
@@ -159,6 +161,24 @@ open class MainViewModel @Inject constructor(
     fun selectOnlyBookmarkHighlightColor(position: Int) {
         for (i in bookmarkHighlightColors.indices) {
             bookmarkHighlightColors[i] = bookmarkHighlightColors[i].copy(selected = i == position)
+        }
+    }
+
+    fun initErrorHighlightColorList() {
+        errorHighlightColors.clear()
+        errorHighlightColors.add(ColorModel(colorCode = "#FFE53935", true))
+        errorHighlightColors.add(ColorModel(colorCode = "#FFFF6D00"))
+        errorHighlightColors.add(ColorModel(colorCode = "#FF6200EE"))
+        errorHighlightColors.add(ColorModel(colorCode = "#FF018786"))
+        errorHighlightColors.add(ColorModel(colorCode = "#FF1565C0"))
+        errorHighlightColors.add(ColorModel(colorCode = "#FF2E7D32"))
+        errorHighlightColors.add(ColorModel(colorCode = "#FF000000"))
+        errorHighlightColors.add(ColorModel(colorCode = "#FFAF8F6E"))
+    }
+
+    fun selectOnlyErrorHighlightColor(position: Int) {
+        for (i in errorHighlightColors.indices) {
+            errorHighlightColors[i] = errorHighlightColors[i].copy(selected = i == position)
         }
     }
 

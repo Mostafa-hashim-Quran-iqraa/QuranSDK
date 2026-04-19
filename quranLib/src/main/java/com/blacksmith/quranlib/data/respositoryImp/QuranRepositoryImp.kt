@@ -6,6 +6,7 @@ import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.JuzIndexItem
 import com.blacksmith.quranlib.data.model.PageEntity
 import com.blacksmith.quranlib.data.model.SurahIndexEntry
+import com.blacksmith.quranlib.data.model.SurahListItem
 import com.blacksmith.quranlib.data.model.WordEntity
 import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.domain.parseFromJson
@@ -176,5 +177,21 @@ class QuranRepositoryImp @Inject constructor(
                     surahs    = (juzSurahsMap[juzId] ?: emptyList()).sortedBy { it.page },
                 )
             }
+        }
+
+    override suspend fun getSurahList(context: Context): List<SurahListItem> =
+        withContext(Dispatchers.IO) {
+            val data = _cachedQuranData ?: getQuranData(context)
+            data.suras
+                ?.mapNotNull { surah ->
+                    SurahListItem(
+                        surahId     = surah.id?.toIntOrNull()       ?: return@mapNotNull null,
+                        surahNameAr = surah.name_ar                 ?: "",
+                        ayaCount    = surah.aya_numbers             ?: 0,
+                        page        = surah.page_number             ?: 1,
+                    )
+                }
+                ?.sortedBy { it.surahId }
+                ?: emptyList()
         }
 }

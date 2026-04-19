@@ -7,7 +7,6 @@ import com.blacksmith.quranlib.data.model.JuzIndexItem
 import com.blacksmith.quranlib.data.model.PageEntity
 import com.blacksmith.quranlib.data.model.SurahIndexEntry
 import com.blacksmith.quranlib.data.model.WordEntity
-import com.blacksmith.quranlib.data.model.WordTextEntity
 import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.domain.parseFromJson
 import com.blacksmith.quranlib.domain.remote.QuranRepository
@@ -28,7 +27,7 @@ class QuranRepositoryImp @Inject constructor(
         withContext(Dispatchers.IO) {
             val list = mutableListOf<PageEntity>()
 
-            val cursor = if (versionNumber == QuranConstants.PAGES_VERSION_2) db.rawQuery("SELECT * FROM pages_v2", null)
+            val cursor = if (versionNumber == QuranConstants.VERSION_KING_FAHD_1421) db.rawQuery("SELECT * FROM pages_v2", null)
             else db.rawQuery("SELECT * FROM pages_v4", null)
 
             cursor.use {
@@ -112,56 +111,69 @@ class QuranRepositoryImp @Inject constructor(
             results
         }
 
-    override suspend fun getJuzIndex(context: Context): List<JuzIndexItem> =
+    override suspend fun getJuzIndexWithSurasInsideJuz(context: Context): List<JuzIndexItem> =
         withContext(Dispatchers.IO) {
             val data = _cachedQuranData ?: getQuranData(context)
 
-            // Each surah has an inner "chapters" list that tells us exactly which
-            // juz contain it AND the page where that surah's content starts inside
-            // each juz.  This is the reliable source — it covers surahs that span
-            // multiple juz (e.g. Al-Baqarah in juz 1, 2 and 3).
-            //
-            // JSON structure (inner chapters per surah):
-            //   surah.chapters = [
-            //     { id: 1, page_number: 2  },   ← surah starts at p.2 inside juz 1
-            //     { id: 2, page_number: 22 },   ← surah continues at p.22 in juz 2
-            //     { id: 3, page_number: 42 }    ← surah continues at p.42 in juz 3
-            //   ]
+            // Build juzId → first_aya_id lookup from the outer chapters list
+            // e.g. Juz 2 → 149  (global aya ID that opens Juz 2)
+            val juzFirstAyaId: Map<Int, Int> = data.chapters
+                ?.mapNotNull { chapter ->
+                    val juzId     = chapter.id?.toIntOrNull() ?: return@mapNotNull null
+                    val firstAyaId = chapter.first_aya_id?.takeIf { it > 0 } ?: return@mapNotNull null
+                    juzId to firstAyaId
+                }
+                ?.toMap()
+                ?: emptyMap()
 
             val juzSurahsMap = mutableMapOf<Int, MutableList<SurahIndexEntry>>()
 
             data.suras?.forEach { surah ->
-                val surahId      = surah.id?.toIntOrNull() ?: return@forEach
-                val surahNameAr  = surah.name_ar ?: ""
-                // First aya text is used as a recognisable preview in all juz
-                val firstAyaText = surah.ayas?.firstOrNull()?.text ?: ""
+                val surahId     = surah.id?.toIntOrNull() ?: return@forEach
+                val surahNameAr = surah.name_ar ?: ""
+
+                // Build a fast lookup: global aya id → aya text  (only for THIS surah)
+                val ayaTextById: Map<Int, String> = surah.ayas
+                    ?.mapNotNull { aya ->
+                        val id   = aya.id?.toIntOrNull() ?: return@mapNotNull null
+                        val text = aya.text ?: return@mapNotNull null
+                        id to text
+                    }
+                    ?.toMap()
+                    ?: emptyMap()
+
+                val fallbackText = surah.ayas?.firstOrNull()?.text ?: ""
 
                 surah.chapters?.forEach inner@{ juzEntry ->
-                    val juzId      = juzEntry.id?.toIntOrNull()?.takeIf { it in 1..30 } ?: return@inner
-                    // page_number here = the page this surah starts at WITHIN this juz
-                    val pageInJuz  = juzEntry.page_number?.takeIf { it > 0 }
+                    val juzId     = juzEntry.id?.toIntOrNull()?.takeIf { it in 1..30 } ?: return@inner
+                    val pageInJuz = juzEntry.page_number?.takeIf { it > 0 }
                         ?: surah.page_number
                         ?: 1
+
+                    // Use the text of the aya that opens this juz if it belongs to
+                    // this surah; otherwise fall back to the surah's own first aya.
+                    val previewText = juzFirstAyaId[juzId]
+                        ?.let { firstId -> ayaTextById[firstId] }
+                        ?: fallbackText
 
                     juzSurahsMap.getOrPut(juzId) { mutableListOf() }.add(
                         SurahIndexEntry(
                             surahId      = surahId,
                             surahNameAr  = surahNameAr,
-                            firstAyaText = firstAyaText,
+                            firstAyaText = previewText,
                             page         = pageInJuz,
                         )
                     )
                 }
             }
 
-            // Build the final 30-juz list; sort entries inside each juz by page
-            // (ascending) so the order matches the mushaf reading order.
+            // Build final 30-juz list sorted by page within each juz
             (1..30).map { juzId ->
                 val outerChapter = data.chapters?.find { it.id?.toIntOrNull() == juzId }
                 JuzIndexItem(
-                    juzId    = juzId,
+                    juzId     = juzId,
                     juzNameAr = outerChapter?.name_ar ?: "الجزء $juzId",
-                    surahs   = (juzSurahsMap[juzId] ?: emptyList()).sortedBy { it.page },
+                    surahs    = (juzSurahsMap[juzId] ?: emptyList()).sortedBy { it.page },
                 )
             }
         }

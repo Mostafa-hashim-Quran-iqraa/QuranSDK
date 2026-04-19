@@ -1,7 +1,7 @@
 package com.blacksmith.quranlib.data.util
 
 object QuranConstants {
-    const val PAGES_VERSION_2 = 2
-    const val PAGES_VERSION_4 = 4
-    const val PAGES_VERSION_4_colored = 41
+    const val VERSION_KING_FAHD_1421 = 1
+    const val VERSION_KING_FAHD_1441 = 2
+    const val VERSION_KING_FAHD_1441_COLORED = 3
 }

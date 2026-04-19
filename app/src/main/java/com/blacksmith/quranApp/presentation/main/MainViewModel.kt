@@ -20,14 +20,15 @@ open class MainViewModel @Inject constructor(
     var surahTitleColors = mutableStateListOf<ColorModel>()
     var fontColors = mutableStateListOf<ColorModel>()
     var highlightColors = mutableStateListOf<ColorModel>()
+    var bookmarkHighlightColors = mutableStateListOf<ColorModel>()
     var ayaNumberColors = mutableStateListOf<ColorModel>()
     var pageToOpen by mutableIntStateOf(1)
     var isAyaHighlight by mutableStateOf(true)
+    var isBookmarkAyaHighlight by mutableStateOf(true)
     var isEnableJuzClick by mutableStateOf(false)
     var isEnableSuraClick by mutableStateOf(false)
     var isBoldFont by mutableStateOf(true)
-    var isText by mutableStateOf(true)
-    var quranPagesVersion by mutableIntStateOf(QuranConstants.PAGES_VERSION_2)
+    var quranPagesVersion by mutableIntStateOf(QuranConstants.VERSION_KING_FAHD_1421)
 
     init {
         initBGColorList()
@@ -35,6 +36,7 @@ open class MainViewModel @Inject constructor(
         initSurahTitleColorList()
         initFontColorList()
         initHighlightColorList()
+        initBookmarkHighlightColorList()
         ayaNumberColorList()
     }
 
@@ -122,6 +124,18 @@ open class MainViewModel @Inject constructor(
         highlightColors.add(ColorModel(colorCode = "#55FFFF00"))
         highlightColors.add(ColorModel(colorCode = "#55000000"))
         highlightColors.add(ColorModel(colorCode = "#14352A"))
+    }
+
+    fun initBookmarkHighlightColorList() {
+        bookmarkHighlightColors.clear()
+        bookmarkHighlightColors.add(ColorModel(colorCode = "#550073C9",true))
+        bookmarkHighlightColors.add(ColorModel(colorCode = "#55AF8F6E", ))
+        bookmarkHighlightColors.add(ColorModel(colorCode = "#551BF802"))
+        bookmarkHighlightColors.add(ColorModel(colorCode = "#55FA050F"))
+        bookmarkHighlightColors.add(ColorModel(colorCode = "#55FDF8F2"))
+        bookmarkHighlightColors.add(ColorModel(colorCode = "#55FFFF00"))
+        bookmarkHighlightColors.add(ColorModel(colorCode = "#55000000"))
+        bookmarkHighlightColors.add(ColorModel(colorCode = "#14352A"))
     }
 
     fun ayaNumberColorList() {

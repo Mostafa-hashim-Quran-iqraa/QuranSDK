@@ -6,6 +6,7 @@ data class ChapterModel(
     var id: String? = "",
     var number: String? = "",
     var page_number: Int? = 0,
+    var first_aya_id: Int? = 0,
     var name: String? = "",
     var name_ar: String? = "",
     var name_en: String? = "",

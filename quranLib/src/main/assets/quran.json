@@ -84114,6 +84114,7 @@
       "name_ar": "الجزء الأول",
       "name_en": "Part 1",
       "page_number": 1,
+      "first_aya_id": 1,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 1"
@@ -84123,6 +84124,7 @@
       "name_ar": "الجزء الثاني",
       "name_en": "Part 2",
       "page_number": 22,
+      "first_aya_id": 149,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 2"
@@ -84132,6 +84134,7 @@
       "name_ar": "الجزء الثالث",
       "name_en": "Part 3",
       "page_number": 42,
+      "first_aya_id": 260,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 3"
@@ -84141,6 +84144,7 @@
       "name_ar": "الجزء الرابع",
       "name_en": "Part 4",
       "page_number": 62,
+      "first_aya_id": 386,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 4"
@@ -84150,6 +84154,7 @@
       "name_ar": "الجزء الخامس",
       "name_en": "Part 5",
       "page_number": 82,
+      "first_aya_id": 517,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 5"
@@ -84159,6 +84164,7 @@
       "name_ar": "الجزء السادس",
       "name_en": "Part 6",
       "page_number": 102,
+      "first_aya_id": 641,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 6"
@@ -84168,6 +84174,7 @@
       "name_ar": "الجزء السابع",
       "name_en": "Part 7",
       "page_number": 121,
+      "first_aya_id": 751,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 7"
@@ -84177,6 +84184,7 @@
       "name_ar": "الجزء الثامن",
       "name_en": "Part 8",
       "page_number": 142,
+      "first_aya_id": 900,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 8"
@@ -84186,6 +84194,7 @@
       "name_ar": "الجزء التاسع",
       "name_en": "Part 9",
       "page_number": 162,
+      "first_aya_id": 1042,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 9"
@@ -84195,6 +84204,7 @@
       "name_ar": "الجزء العاشر",
       "name_en": "Part 10",
       "page_number": 182,
+      "first_aya_id": 1201,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 10"
@@ -84204,6 +84214,7 @@
       "name_ar": "الجزء الحادي عشر",
       "name_en": "Part 11",
       "page_number": 201,
+      "first_aya_id": 1328,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 11"
@@ -84213,6 +84224,7 @@
       "name_ar": "الجزء الثاني عشر",
       "name_en": "Part 12",
       "page_number": 222,
+      "first_aya_id": 1479,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 12"
@@ -84222,6 +84234,7 @@
       "name_ar": "الجزء الثالث عشر",
       "name_en": "Part 13",
       "page_number": 242,
+      "first_aya_id": 1649,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 13"
@@ -84231,6 +84244,7 @@
       "name_ar": "الجزء الرابع عشر",
       "name_en": "Part 14",
       "page_number": 262,
+      "first_aya_id": 1803,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 14"
@@ -84240,6 +84254,7 @@
       "name_ar": "الجزء الخامس عشر",
       "name_en": "Part 15",
       "page_number": 282,
+      "first_aya_id": 2030,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 15"
@@ -84249,6 +84264,7 @@
       "name_ar": "الجزء السادس عشر",
       "name_en": "Part 16",
       "page_number": 302,
+      "first_aya_id": 2215,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 16"
@@ -84258,6 +84274,7 @@
       "name_ar": "الجزء السابع عشر",
       "name_en": "Part 17",
       "page_number": 322,
+      "first_aya_id": 2484,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 17"
@@ -84267,6 +84284,7 @@
       "name_ar": "الجزء الثامن عشر",
       "name_en": "Part 18",
       "page_number": 342,
+      "first_aya_id": 2674,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 18"
@@ -84276,6 +84294,7 @@
       "name_ar": "الجزء التاسع عشر",
       "name_en": "Part 19",
       "page_number": 362,
+      "first_aya_id": 2876,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 19"
@@ -84286,6 +84305,7 @@
       "name_en": "Part 20",
       "page_number": 382,
       "created_at": null,
+      "first_aya_id": 3215,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 20"
     },
@@ -84295,6 +84315,7 @@
       "name_en": "Part 21",
       "page_number": 402,
       "created_at": null,
+      "first_aya_id": 3386,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 21"
     },
@@ -84303,6 +84324,7 @@
       "name_ar": "الجزء الثاني العشرون",
       "name_en": "Part 22",
       "page_number": 422,
+      "first_aya_id": 3564,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 22"
@@ -84312,6 +84334,7 @@
       "name_ar": "الجزء الثالث والعشرون",
       "name_en": "Part 23",
       "page_number": 442,
+      "first_aya_id": 3733,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 23"
@@ -84321,6 +84344,7 @@
       "name_ar": "الجزء الرابع والعشرون",
       "name_en": "Part 24",
       "page_number": 462,
+      "first_aya_id": 4090,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 24"
@@ -84330,6 +84354,7 @@
       "name_ar": "الجزء الخامس والعشرون",
       "name_en": "Part 25",
       "page_number": 482,
+      "first_aya_id": 4265,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 25"
@@ -84339,6 +84364,7 @@
       "name_ar": "الجزء السادس والعشرون",
       "name_en": "Part 26",
       "page_number": 502,
+      "first_aya_id": 4511,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 26"
@@ -84348,6 +84374,7 @@
       "name_ar": "الجزء السابع والعشرون",
       "name_en": "Part 27",
       "page_number": 522,
+      "first_aya_id": 4706,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 27"
@@ -84357,6 +84384,7 @@
       "name_ar": "الجزء الثامن والعشرون",
       "name_en": "Part 28",
       "page_number": 542,
+      "first_aya_id": 5105,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 28"
@@ -84366,6 +84394,7 @@
       "name_ar": "الجزء التاسع والعشرون",
       "name_en": "Part 29",
       "page_number": 562,
+      "first_aya_id": 5242,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 29"
@@ -84375,6 +84404,7 @@
       "name_ar": "الجزء الثلاثون",
       "name_en": "Part 30",
       "page_number": 582,
+      "first_aya_id": 5673,
       "created_at": null,
       "updated_at": "2023-03-06 22:45:55",
       "name": "Part 30"

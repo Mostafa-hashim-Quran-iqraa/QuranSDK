@@ -219,42 +219,23 @@ fun Content(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                if (viewModel.isText)
-                    QuranPageTextModeScreen(
-                        isReversePager = !viewModel.isArabicLocale(),
-                        fontColor = fontColor,
-                        quranPagesVersion = viewModel.quranPagesVersion,
-                        suraHeaderColor = Color(viewModel.surahHeaderColor.toColorInt()),
-                        suraNameColor = Color(viewModel.surahTitleColor.toColorInt()),
-                        highlightColor = Color(viewModel.highlightColor.toColorInt()),
-                        pageBackground = bgColor,
-                        ayahNumberColor = Color(viewModel.ayahNumberColor.toColorInt()),
-                        isAyaHighlight = viewModel.isAyaHighlight,
-                        isSurahClickable = viewModel.isEnableSuraClick,
-                        isFontBold = viewModel.isBoldFont,
-                        pageToOpen = viewModel.pageToOpen,
-                        isJuzClickable = viewModel.isEnableJuzClick,
-                        onClickJuzName = {},
-                        onClickSurahName = {}
-                    )
-                else
-                    QuranPageCanvasModeScreen(
-                        isReversePager = !viewModel.isArabicLocale(),
-                        fontColor = fontColor,
-                        quranPagesVersion = viewModel.quranPagesVersion,
-                        suraHeaderColor = Color(viewModel.surahHeaderColor.toColorInt()),
-                        suraNameColor = Color(viewModel.surahTitleColor.toColorInt()),
-                        highlightColor = Color(viewModel.highlightColor.toColorInt()),
-                        pageBackground = bgColor,
-                        ayahNumberColor = Color(viewModel.ayahNumberColor.toColorInt()),
-                        isAyaHighlight = viewModel.isAyaHighlight,
-                        isSurahClickable = viewModel.isEnableSuraClick,
-                        isFontBold = viewModel.isBoldFont,
-                        pageToOpen = viewModel.pageToOpen,
-                        isJuzClickable = viewModel.isEnableJuzClick,
-                        onClickJuzName = {},
-                        onClickSurahName = {}
-                    )
+                QuranPageCanvasModeScreen(
+                    isReversePager = !viewModel.isArabicLocale(),
+                    fontColor = fontColor,
+                    quranPagesVersion = viewModel.quranPagesVersion,
+                    suraHeaderColor = Color(viewModel.surahHeaderColor.toColorInt()),
+                    suraNameColor = Color(viewModel.surahTitleColor.toColorInt()),
+                    highlightColor = Color(viewModel.highlightColor.toColorInt()),
+                    pageBackground = bgColor,
+                    ayahNumberColor = Color(viewModel.ayahNumberColor.toColorInt()),
+                    isAyaHighlight = viewModel.isAyaHighlight,
+                    isSurahClickable = viewModel.isEnableSuraClick,
+                    isFontBold = viewModel.isBoldFont,
+                    pageToOpen = viewModel.pageToOpen,
+                    isJuzClickable = viewModel.isEnableJuzClick,
+                    onClickJuzName = {},
+                    onClickSurahName = {}
+                )
 
                 // نتائج البحث فوق صفحة القرآن
                 androidx.compose.animation.AnimatedVisibility(

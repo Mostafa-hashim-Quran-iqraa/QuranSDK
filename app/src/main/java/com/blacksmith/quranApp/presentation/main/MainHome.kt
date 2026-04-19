@@ -651,83 +651,6 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                 }
             }
 
-            //is text
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.toDP),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center,
-            )
-            {
-                Text(
-                    text = stringResource(R.string.painting_method),
-                    fontSize = 14.toSP,
-                    color = colorPrimary,
-                    fontFamily = fontNeoSansArabicRegular600
-                )
-
-                Row(
-                    modifier = Modifier.padding(top = 5.toDP),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(0.toDP)
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.toDP))
-                            .border(
-                                width = 1.toDP,
-                                color = if (viewModel.isText) colorPrimary else gray_200,
-                                shape = RoundedCornerShape(8.toDP)
-                            )
-                            .clickable(
-                                onClick = {
-                                    viewModel.isText = true
-                                }
-                            )
-                            .background(if (viewModel.isText) colorPrimary else White)
-                            .padding(4.toDP),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.text),
-                            fontSize = 14.toSP,
-                            color = if (viewModel.isText) White else colorPrimary,
-                            fontFamily = fontNeoSansArabicRegular600
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 10.toDP)
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.toDP))
-                            .border(
-                                width = 1.toDP,
-                                color = if (!viewModel.isText) colorPrimary else gray_200,
-                                shape = RoundedCornerShape(8.toDP)
-                            )
-                            .clickable(
-                                onClick = {
-                                    viewModel.isText = false
-                                }
-                            )
-                            .background(if (!viewModel.isText) colorPrimary else White)
-                            .padding(4.toDP),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.images),
-                            fontSize = 14.toSP,
-                            color = if (!viewModel.isText) White else colorPrimary,
-                            fontFamily = fontNeoSansArabicRegular600
-                        )
-                    }
-                }
-            }
-
             //pages version
             Column(
                 modifier = Modifier
@@ -756,22 +679,22 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             .clip(RoundedCornerShape(8.toDP))
                             .border(
                                 width = 1.toDP,
-                                color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_2) colorPrimary else gray_200,
+                                color = if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1421) colorPrimary else gray_200,
                                 shape = RoundedCornerShape(8.toDP)
                             )
                             .clickable(
                                 onClick = {
-                                    viewModel.quranPagesVersion = QuranConstants.PAGES_VERSION_2
+                                    viewModel.quranPagesVersion = QuranConstants.VERSION_KING_FAHD_1421
                                 }
                             )
-                            .background(if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_2) colorPrimary else White)
+                            .background(if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1421) colorPrimary else White)
                             .padding(4.toDP),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "2",
+                            text = "King Fahd 1421",
                             fontSize = 14.toSP,
-                            color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_2) White else colorPrimary,
+                            color = if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1421) White else colorPrimary,
                             fontFamily = fontNeoSansArabicRegular600
                         )
                     }
@@ -783,22 +706,22 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             .clip(RoundedCornerShape(8.toDP))
                             .border(
                                 width = 1.toDP,
-                                color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4) colorPrimary else gray_200,
+                                color = if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1441) colorPrimary else gray_200,
                                 shape = RoundedCornerShape(8.toDP)
                             )
                             .clickable(
                                 onClick = {
-                                    viewModel.quranPagesVersion = QuranConstants.PAGES_VERSION_4
+                                    viewModel.quranPagesVersion = QuranConstants.VERSION_KING_FAHD_1441
                                 }
                             )
-                            .background(if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4) colorPrimary else White)
+                            .background(if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1441) colorPrimary else White)
                             .padding(4.toDP),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "4",
+                            text = "King Fahd 1441",
                             fontSize = 14.toSP,
-                            color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4) White else colorPrimary,
+                            color = if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1441) White else colorPrimary,
                             fontFamily = fontNeoSansArabicRegular600
                         )
                     }
@@ -810,22 +733,22 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             .clip(RoundedCornerShape(8.toDP))
                             .border(
                                 width = 1.toDP,
-                                color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4_colored) colorPrimary else gray_200,
+                                color = if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1441_COLORED) colorPrimary else gray_200,
                                 shape = RoundedCornerShape(8.toDP)
                             )
                             .clickable(
                                 onClick = {
-                                    viewModel.quranPagesVersion = QuranConstants.PAGES_VERSION_4_colored
+                                    viewModel.quranPagesVersion = QuranConstants.VERSION_KING_FAHD_1441_COLORED
                                 }
                             )
-                            .background(if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4_colored) colorPrimary else White)
+                            .background(if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1441_COLORED) colorPrimary else White)
                             .padding(4.toDP),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = stringResource(R.string._4_colored),
                             fontSize = 14.toSP,
-                            color = if (viewModel.quranPagesVersion == QuranConstants.PAGES_VERSION_4_colored) White else colorPrimary,
+                            color = if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1441_COLORED) White else colorPrimary,
                             fontFamily = fontNeoSansArabicRegular600
                         )
                     }
@@ -899,7 +822,6 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                                     putExtra("isEnableJuzClick", viewModel.isEnableJuzClick)
                                     putExtra("isEnableSuraClick", viewModel.isEnableSuraClick)
                                     putExtra("isBoldFont", viewModel.isBoldFont)
-                                    putExtra("isText", viewModel.isText)
                                     putExtra("quranPagesVersion", viewModel.quranPagesVersion)
                                     //page bg
 

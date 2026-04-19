@@ -91,7 +91,7 @@ private const val MUSHAF_LINES_PER_PAGE = 16
 @Composable
 fun QuranPageCanvasModeScreen(
     viewModel: QuranViewModel = hiltViewModel(),
-    quranPagesVersion: Int = QuranConstants.PAGES_VERSION_2,
+    quranPagesVersion: Int = QuranConstants.VERSION_KING_FAHD_1421,
     isReversePager: Boolean = false,
     pageBackground: Color = White,
     fontColor: Color = Black,
@@ -259,7 +259,6 @@ private fun QuranPageItem(
     val pageNumber = remember(currentPage) { toArabicNumber(currentPage + 1) }
     val density = LocalDensity.current
 
-    @Suppress("UNUSED_VARIABLE") val fontReady = viewModel.fontReadyState[currentPage + 1]
     val typeface = viewModel.getTypefaceForPage(context, currentPage + 1)
     val typefaceSuraName = viewModel.typefaceSuraName
     val suraHeaderBitmap = viewModel.getBitmap(context, R.drawable.surah_title)
@@ -412,7 +411,7 @@ private fun CanvasQuranPage(
     var showContextMenu by remember { mutableStateOf(false) }
 
     // موقع الكلمة المحددة في الـ window الحقيقي بالـ px
-    var selectedWordRectInWindow by remember { mutableStateOf(android.graphics.RectF()) }
+    var selectedWordRectInWindow by remember { mutableStateOf(RectF()) }
 
     // موقع الـ Canvas في الـ window
     var canvasWindowOffset by remember { mutableStateOf(Offset.Zero) }
@@ -491,7 +490,7 @@ private fun CanvasQuranPage(
                                 // نحوّل موقع الكلمة من Canvas-local إلى Window
                                 val hitRect = wordRects.firstOrNull { it.first == hit }?.second
                                 if (hitRect != null) {
-                                    selectedWordRectInWindow = android.graphics.RectF(
+                                    selectedWordRectInWindow = RectF(
                                         canvasWindowOffset.x + hitRect.left,
                                         canvasWindowOffset.y + hitRect.top,
                                         canvasWindowOffset.x + hitRect.right,
@@ -561,9 +560,6 @@ private fun CanvasQuranPage(
     }
 }
 
-// =============================================================================
-// drawPageContent
-// =============================================================================
 private fun drawPageContent(
     scope: DrawScope,
     horizontalPaddingPx: Float,
@@ -794,27 +790,6 @@ private fun computeWordPositions(
     }
 
     return positions
-}
-
-private fun computeWordPositions(
-    canvasWidth: Float,
-    line: LineModel,
-    textPaint: Paint,
-): FloatArray {
-    val words = line.words
-    val metrics = Array(words.size) { i ->
-        val bounds = android.graphics.Rect()
-        textPaint.getTextBounds(words[i].glyph, 0, words[i].glyph.length, bounds)
-        val advance = measureWordWidth(textPaint, words[i].glyph)
-        val boundsRight = bounds.right.toFloat()
-        val visualWidth = if (boundsRight > advance * 3f) {
-            boundsRight
-        } else {
-            advance.coerceAtLeast(boundsRight)
-        }
-        Pair(visualWidth, 0f)
-    }
-    return computeWordPositions(canvasWidth, line, textPaint, metrics)
 }
 
 // =============================================================================

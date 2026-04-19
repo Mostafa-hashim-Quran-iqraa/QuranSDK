@@ -44,7 +44,7 @@ class QuranViewModel @Inject constructor(
         private set
     var quranPageModels = mutableStateListOf<QuranPageModel>()
         private set
-    var pagesVersion = QuranConstants.PAGES_VERSION_2
+    var pagesVersion = QuranConstants.VERSION_KING_FAHD_1421
 
     private val _typefaceCache = object : LinkedHashMap<String, Typeface>(
         MAX_CACHED_FONTS + 1, 0.75f, true
@@ -132,10 +132,10 @@ class QuranViewModel @Inject constructor(
 
     fun loadTypefaceFromAssets(context: Context, fontFileName: String): Typeface =
 //        Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
-        if (pagesVersion == QuranConstants.PAGES_VERSION_2)
+        if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421)
             Typeface.createFromAsset(context.assets, "fonts/$fontFileName")
         else {
-            if (pagesVersion == QuranConstants.PAGES_VERSION_4)
+            if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1441)
                 Typeface.createFromAsset(context.assets, "fonts_v4_normal/$fontFileName")
             else
                 Typeface.createFromAsset(context.assets, "fonts_v4_colored/$fontFileName")
@@ -147,10 +147,10 @@ class QuranViewModel @Inject constructor(
     private fun fontFileNameForPage(page: Int): String {
 //        val p = page.toString().padStart(3, '0')
 //        return "QCF2$p.ttf"
-        val p = if (pagesVersion == QuranConstants.PAGES_VERSION_2)
+        val p = if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421)
             page.toString().padStart(3, '0')
         else page.toString()
-        return if (pagesVersion == QuranConstants.PAGES_VERSION_2) "QCF2$p.ttf" else "p$page.ttf"
+        return if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421) "QCF2$p.ttf" else "p$page.ttf"
     }
 
 
@@ -212,7 +212,7 @@ class QuranViewModel @Inject constructor(
                                         chapterMap[ayaModel.chapter_id] ?: EMPTY_CHAPTER
                                     WordModel(
                                         id = word.id,
-                                        glyph = if (pagesVersion == QuranConstants.PAGES_VERSION_2) word.glyphV2
+                                        glyph = if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421) word.glyphV2
                                             ?: "" else word.glyphV4 ?: "",
                                         wordText = word.wordText ?: "",
                                         location = word.location,

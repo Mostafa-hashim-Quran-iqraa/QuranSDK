@@ -30,9 +30,9 @@ open class QuranViewModel @Inject constructor(
     var surahHeaderColor by mutableStateOf("")
     var surahTitleColor by mutableStateOf("")
     var highlightColor by mutableStateOf("")
+    var bookmarkHighlightColor by mutableStateOf("")
     var ayahNumberColor by mutableStateOf("")
-    var isText by mutableStateOf(true)
-    var quranPagesVersion by mutableIntStateOf(QuranConstants.PAGES_VERSION_2)
+    var quranPagesVersion by mutableIntStateOf(QuranConstants.VERSION_KING_FAHD_1421)
 
     // ─── Search state ─────────────────────────────────────────────────────────
     var isSearchVisible by mutableStateOf(false)

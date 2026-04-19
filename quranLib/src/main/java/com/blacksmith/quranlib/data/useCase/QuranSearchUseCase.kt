@@ -24,5 +24,5 @@ class QuranSearchUseCase @Inject constructor(
      * Result is cached after the first call (reads from the same quran.json cache).
      */
     suspend fun getJuzIndex(context: Context): List<JuzIndexItem> =
-        repository.getJuzIndex(context)
+        repository.getJuzIndexWithSurasInsideJuz(context)
 }

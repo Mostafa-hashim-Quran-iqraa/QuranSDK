@@ -19,6 +19,6 @@ interface QuranRepository {
     suspend fun searchAyas(context: Context, query: String): List<AyaModel>
 
     /** Returns 30 Juz entries, each with the Surahs that start inside it. */
-    suspend fun getJuzIndex(context: Context): List<JuzIndexItem>
+    suspend fun getJuzIndexWithSurasInsideJuz(context: Context): List<JuzIndexItem>
 
 }

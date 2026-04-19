@@ -99,14 +99,14 @@ fun QuranPageCanvasModeScreen(
     suraNameColor: Color = GreenDark,
     highlightColor: Color = colorPrimaryMoreLight,
     ayahNumberColor: Color = red_light,
-    isAyaHighlight: Boolean = false,
+    highlightType: Int = QuranConstants.HIGHLIGHT_TYPE_AYA,
     isSurahClickable: Boolean = false,
     isJuzClickable: Boolean = false,
     isFontBold: Boolean = false,
     pageToOpen: Int = 0,
     onClickJuzName: (ChapterModel) -> Unit = {},
     onClickSurahName: (SurahModel) -> Unit = {},
-    onWordLongPressed: (isAyaHighlight: Boolean, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit = { isAyaHighlight, wordModel, selectedWordRectInWindow, selectedAyah, selectedSurah, ayahWords -> },
+    onWordLongPressed: (highlightType: Int, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit = { highlightType, wordModel, selectedWordRectInWindow, selectedAyah, selectedSurah, ayahWords -> },
     onWordClicked: (WordModel) -> Unit = { wordModel -> },
 ) {
     val context = LocalContext.current
@@ -143,7 +143,7 @@ fun QuranPageCanvasModeScreen(
         suraNameColor = suraNameColor,
         highlightColor = highlightColor,
         ayahNumberColor = ayahNumberColor,
-        isAyaHighlight = isAyaHighlight,
+        highlightType = highlightType,
         isSurahClickable = isSurahClickable,
         isJuzClickable = isJuzClickable,
         isFontBold = isFontBold,
@@ -170,13 +170,13 @@ private fun QuranContent(
     suraNameColor: Color,
     highlightColor: Color,
     ayahNumberColor: Color,
-    isAyaHighlight: Boolean,
+    highlightType: Int,
     isSurahClickable: Boolean,
     isJuzClickable: Boolean,
     isFontBold: Boolean,
     onClickJuzName: (ChapterModel) -> Unit,
     onClickSurahName: (SurahModel) -> Unit,
-    onWordLongPressed: (isAyaHighlight: Boolean, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    onWordLongPressed: (Int, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
     onWordClicked: (WordModel) -> Unit,
 ) {
     Surface(color = pageBackground, modifier = Modifier.fillMaxSize()) {
@@ -222,7 +222,7 @@ private fun QuranContent(
                                     suraNameColor = suraNameColor,
                                     highlightColor = highlightColor,
                                     ayahNumberColor = ayahNumberColor,
-                                    isAyaHighlight = isAyaHighlight,
+                                    highlightType = highlightType,
                                     isSurahClickable = isSurahClickable,
                                     isJuzClickable = isJuzClickable,
                                     isFontBold = isFontBold,
@@ -255,13 +255,13 @@ private fun QuranPageItem(
     suraNameColor: Color,
     highlightColor: Color,
     ayahNumberColor: Color,
-    isAyaHighlight: Boolean,
+    highlightType: Int,
     isSurahClickable: Boolean,
     isJuzClickable: Boolean,
     isFontBold: Boolean,
     onClickJuzName: (ChapterModel) -> Unit,
     onClickSurahName: (SurahModel) -> Unit,
-    onWordLongPressed: (isAyaHighlight: Boolean, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    onWordLongPressed: (Int, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
     onWordClicked: (WordModel) -> Unit,
 ) {
     val pageModel = remember(currentPage) { viewModel.quranPageModels[currentPage] }
@@ -335,7 +335,7 @@ private fun QuranPageItem(
                 suraHeaderColor = suraHeaderColor,
                 suraNameColor = suraNameColor,
                 isBold = isFontBold,
-                isAyaHighlight = isAyaHighlight,
+                highlightType = highlightType,
                 onWordLongPressed = onWordLongPressed,
                 onWordClicked = onWordClicked,
             )
@@ -414,8 +414,8 @@ private fun CanvasQuranPage(
     suraHeaderColor: Color,
     suraNameColor: Color,
     isBold: Boolean,
-    isAyaHighlight: Boolean,
-    onWordLongPressed: (isAyaHighlight: Boolean, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
+    highlightType: Int,
+    onWordLongPressed: (Int, WordModel, RectF, Int?, Int?, List<WordModel>) -> Unit,
     onWordClicked: (WordModel) -> Unit,
 ) {
     var selectedWord by remember(pageModel) { mutableStateOf<WordModel?>(null) }
@@ -452,7 +452,7 @@ private fun CanvasQuranPage(
                     // نسجل موقع الـ Canvas في الـ window مرة واحدة
                     canvasWindowOffset = coords.positionInWindow()
                 }
-                .pointerInput(pageModel, isAyaHighlight) {
+                .pointerInput(pageModel, highlightType) {
                     detectTapGestures(
                         onTap = { tapOffset ->
                             selectedWord = null
@@ -471,7 +471,7 @@ private fun CanvasQuranPage(
                             }?.first
 
                             if (hit != null) {
-                                if (isAyaHighlight) {
+                                if (highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA) {
                                     selectedAyah = hit.ayah
                                     selectedWord = null
                                 } else {
@@ -491,7 +491,7 @@ private fun CanvasQuranPage(
                                     )
                                 }
                                 onWordLongPressed(
-                                    isAyaHighlight,
+                                    highlightType,
                                     hit,
                                     selectedWordRectInWindow,
                                     selectedAyah,
@@ -522,42 +522,10 @@ private fun CanvasQuranPage(
                 selectedWord = selectedWord,
                 selectedAyah = selectedAyah,
                 selectedSurah = selectedSurah,
-                isAyaHighlight = isAyaHighlight,
+                highlightType = highlightType,
                 wordRectsOut = wordRects,
             )
         }
-
-        /* if (showContextMenu && (selectedWord != null || selectedAyah != null)) {
-             Popup(
-                 popupPositionProvider = positionProvider,
-                 onDismissRequest = {
-                     showContextMenu = false
-                     selectedWord = null
-                     selectedAyah = null
-                 },
-             ) {
-                 QuranContextMenu(
-                     onCopy = {
-                         val cb =
-                             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                         cb.setPrimaryClip(ClipData.newPlainText("quran", selectedText))
-                         showContextMenu = false
-                         selectedWord = null
-                         selectedAyah = null
-                     },
-                     onShare = {
-                         val intent = Intent(Intent.ACTION_SEND).apply {
-                             type = "text/plain"
-                             putExtra(Intent.EXTRA_TEXT, selectedText)
-                         }
-                         context.startActivity(Intent.createChooser(intent, null))
-                         showContextMenu = false
-                         selectedWord = null
-                         selectedAyah = null
-                     },
-                 )
-             }
-         }*/
     }
 }
 
@@ -578,7 +546,7 @@ private fun drawPageContent(
     selectedWord: WordModel?,
     selectedAyah: Int?,
     selectedSurah: Int?,
-    isAyaHighlight: Boolean,
+    highlightType: Int,
     wordRectsOut: MutableList<Pair<WordModel, RectF>>,
 ) {
     val canvasWidth = scope.size.width
@@ -689,7 +657,7 @@ private fun drawPageContent(
                         nativeCanvas.scale(scaleX, 1f, canvasWidth, baseline)
                     }
 
-                    if (isAyaHighlight) {
+                    if (highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA) {
                         if (selectedAyah != null && selectedSurah != null) {
                             var mergedLeft = Float.MAX_VALUE
                             var mergedRight = -Float.MAX_VALUE

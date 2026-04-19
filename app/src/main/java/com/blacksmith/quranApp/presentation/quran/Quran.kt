@@ -64,6 +64,7 @@ import androidx.lifecycle.Lifecycle
 import com.blacksmith.quranApp.R
 import com.blacksmith.quranApp.presentation.base.theme.gray_400
 import com.blacksmith.quranlib.data.model.WordModel
+import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.data.util.component.ComposableLifecycle
 import com.blacksmith.quranlib.data.util.helper.toDP
 import com.blacksmith.quranlib.data.util.helper.toSP
@@ -224,9 +225,9 @@ fun Content(
                         selectedWord,
                         selectedAyahId,
                         selectedSurahId,
-                        viewModel.isAyaHighlight
+                        viewModel.highlightType
                     ) {
-                        if (viewModel.isAyaHighlight && selectedAyahId != null) {
+                        if (viewModel.highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA && selectedAyahId != null) {
                             "${wordsByAyah.joinToString(" ") { it.wordText }}\nسورة ${wordsByAyah.firstOrNull()?.surahName} - آية $selectedAyahId"
                         } else {
                             selectedWord?.let { "${it.wordText}\nسورة ${it.surahName} - آية ${it.ayah}" }
@@ -250,15 +251,15 @@ fun Content(
                     highlightColor = Color(viewModel.highlightColor.toColorInt()),
                     pageBackground = bgColor,
                     ayahNumberColor = Color(viewModel.ayahNumberColor.toColorInt()),
-                    isAyaHighlight = viewModel.isAyaHighlight,
+                    highlightType = viewModel.highlightType,
                     isSurahClickable = viewModel.isEnableSuraClick,
                     isFontBold = viewModel.isBoldFont,
                     pageToOpen = viewModel.pageToOpen,
                     isJuzClickable = viewModel.isEnableJuzClick,
                     onClickJuzName = {},
                     onClickSurahName = {},
-                    onWordLongPressed = { isAyaHighlight, wordModel, wordRectInWindow, selectedAyah, selectedSurah, ayahWords ->
-                        if (isAyaHighlight) {
+                    onWordLongPressed = { highlightType, wordModel, wordRectInWindow, selectedAyah, selectedSurah, ayahWords ->
+                        if (highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA) {
                             selectedAyahId = selectedAyah
                             wordsByAyah.clear()
                             wordsByAyah.addAll(ayahWords)

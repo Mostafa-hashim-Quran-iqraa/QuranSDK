@@ -447,22 +447,22 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             .clip(RoundedCornerShape(8.toDP))
                             .border(
                                 width = 1.toDP,
-                                color = if (viewModel.isAyaHighlight) colorPrimary else gray_200,
+                                color = if (viewModel.highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA) colorPrimary else gray_200,
                                 shape = RoundedCornerShape(8.toDP)
                             )
                             .clickable(
                                 onClick = {
-                                    viewModel.isAyaHighlight = true
+                                    viewModel.highlightType = QuranConstants.HIGHLIGHT_TYPE_AYA
                                 }
                             )
-                            .background(if (viewModel.isAyaHighlight) colorPrimary else White)
+                            .background(if (viewModel.highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA) colorPrimary else White)
                             .padding(4.toDP),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = stringResource(R.string.highlight_aya),
                             fontSize = 14.toSP,
-                            color = if (viewModel.isAyaHighlight) White else colorPrimary,
+                            color = if (viewModel.highlightType == QuranConstants.HIGHLIGHT_TYPE_AYA) White else colorPrimary,
                             fontFamily = fontNeoSansArabicRegular600
                         )
                     }
@@ -474,22 +474,22 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             .clip(RoundedCornerShape(8.toDP))
                             .border(
                                 width = 1.toDP,
-                                color = if (!viewModel.isAyaHighlight) colorPrimary else gray_200,
+                                color = if (viewModel.highlightType == QuranConstants.HIGHLIGHT_TYPE_WORD) colorPrimary else gray_200,
                                 shape = RoundedCornerShape(8.toDP)
                             )
                             .clickable(
                                 onClick = {
-                                    viewModel.isAyaHighlight = false
+                                    viewModel.highlightType = QuranConstants.HIGHLIGHT_TYPE_WORD
                                 }
                             )
-                            .background(if (!viewModel.isAyaHighlight) colorPrimary else White)
+                            .background(if (viewModel.highlightType == QuranConstants.HIGHLIGHT_TYPE_WORD) colorPrimary else White)
                             .padding(4.toDP),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = stringResource(R.string.highlight_word),
                             fontSize = 14.toSP,
-                            color = if (!viewModel.isAyaHighlight) White else colorPrimary,
+                            color = if (viewModel.highlightType == QuranConstants.HIGHLIGHT_TYPE_WORD) White else colorPrimary,
                             fontFamily = fontNeoSansArabicRegular600
                         )
                     }
@@ -684,7 +684,8 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             )
                             .clickable(
                                 onClick = {
-                                    viewModel.quranPagesVersion = QuranConstants.VERSION_KING_FAHD_1421
+                                    viewModel.quranPagesVersion =
+                                        QuranConstants.VERSION_KING_FAHD_1421
                                 }
                             )
                             .background(if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1421) colorPrimary else White)
@@ -711,7 +712,8 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             )
                             .clickable(
                                 onClick = {
-                                    viewModel.quranPagesVersion = QuranConstants.VERSION_KING_FAHD_1441
+                                    viewModel.quranPagesVersion =
+                                        QuranConstants.VERSION_KING_FAHD_1441
                                 }
                             )
                             .background(if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1441) colorPrimary else White)
@@ -738,7 +740,8 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                             )
                             .clickable(
                                 onClick = {
-                                    viewModel.quranPagesVersion = QuranConstants.VERSION_KING_FAHD_1441_COLORED
+                                    viewModel.quranPagesVersion =
+                                        QuranConstants.VERSION_KING_FAHD_1441_COLORED
                                 }
                             )
                             .background(if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1441_COLORED) colorPrimary else White)
@@ -818,7 +821,7 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                                     QuranActivity::class.java
                                 ).apply {
                                     putExtra("pageToOpen", viewModel.pageToOpen)
-                                    putExtra("isAyaHighlight", viewModel.isAyaHighlight)
+                                    putExtra("highlightType", viewModel.highlightType)
                                     putExtra("isEnableJuzClick", viewModel.isEnableJuzClick)
                                     putExtra("isEnableSuraClick", viewModel.isEnableSuraClick)
                                     putExtra("isBoldFont", viewModel.isBoldFont)

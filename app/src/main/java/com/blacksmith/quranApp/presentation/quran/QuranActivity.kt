@@ -22,7 +22,7 @@ class QuranActivity :
     @Composable
     override fun DoCreate() {
         viewModel.pageToOpen = intent.getIntExtra("pageToOpen", 0)
-        viewModel.isAyaHighlight = intent.getBooleanExtra("isAyaHighlight", false)
+        viewModel.highlightType = intent.getIntExtra("highlightType", QuranConstants.HIGHLIGHT_TYPE_AYA)
         viewModel.isEnableJuzClick = intent.getBooleanExtra("isEnableJuzClick", false)
         viewModel.isEnableSuraClick = intent.getBooleanExtra("isEnableSuraClick", false)
         viewModel.isBoldFont = intent.getBooleanExtra("isBoldFont", true)

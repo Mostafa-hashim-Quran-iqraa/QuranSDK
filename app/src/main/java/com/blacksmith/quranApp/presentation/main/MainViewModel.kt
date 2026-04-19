@@ -23,7 +23,7 @@ open class MainViewModel @Inject constructor(
     var bookmarkHighlightColors = mutableStateListOf<ColorModel>()
     var ayaNumberColors = mutableStateListOf<ColorModel>()
     var pageToOpen by mutableIntStateOf(1)
-    var isAyaHighlight by mutableStateOf(true)
+    var highlightType by mutableIntStateOf(QuranConstants.HIGHLIGHT_TYPE_AYA)
     var isBookmarkAyaHighlight by mutableStateOf(true)
     var isEnableJuzClick by mutableStateOf(false)
     var isEnableSuraClick by mutableStateOf(false)

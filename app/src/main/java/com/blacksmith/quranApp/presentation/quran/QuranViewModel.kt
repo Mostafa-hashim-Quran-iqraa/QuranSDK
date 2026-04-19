@@ -21,7 +21,7 @@ open class QuranViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     var pageToOpen by mutableIntStateOf(0)
-    var isAyaHighlight by mutableStateOf(false)
+    var highlightType by mutableIntStateOf(QuranConstants.HIGHLIGHT_TYPE_AYA)
     var isEnableJuzClick by mutableStateOf(false)
     var isEnableSuraClick by mutableStateOf(false)
     var isBoldFont by mutableStateOf(true)

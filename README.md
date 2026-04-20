@@ -8,9 +8,9 @@ An Android SDK for rendering the Holy Quran (Mushaf) with full customization —
 
 ## Features
 
-- 🕌 Canvas-based Mushaf rendering (604 pages)
+- 🕌 Mushaf rendering (604 pages)
 - 🎨 Full color customization (background, font, highlights, headers)
-- 🔤 Two print versions: King Fahd 1441 Normal & Colored
+- 🔤 Two print versions: King Fahd 1441 Prints Normal & Colored
 - 📖 Aya-level and Word-level highlight modes
 - 🔖 Bookmark support with highlight color
 - 🔍 Arabic text search

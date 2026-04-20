@@ -12,7 +12,6 @@ appcompat = "1.7.1"
 material = "1.13.0"
 daggeHiltVersion = "2.58"
 hiltNavigationCompose = "1.3.0"
-savedstate = "1.4.0"
 kotlinxCoroutinesAndroid = "1.10.2"
 kotlinxCoroutinesCore = "1.10.2"
 lottieCompose = "6.7.1"
@@ -21,10 +20,11 @@ accompanistFlowlayout = "0.36.0"
 materialExtended = "1.7.8"
 navigationCompose = "2.9.7"
 securityState = "1.1.0"
-glide = "5.0.5"
+glide = "5.0.7"
 glideCompose = "1.0.0-beta08"
-glideCompiler = "5.0.5"
+glideCompiler = "5.0.7"
 converterGson = "3.0.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -46,23 +46,14 @@ glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "g
 glide-compiler = { module = "com.github.bumptech.glide:ksp", version.ref = "glideCompiler" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
-converter-scalars = { module = "com.squareup.retrofit2:converter-scalars", version.ref = "converterGson" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "daggeHiltVersion" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "daggeHiltVersion" }
-#androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltCompiler" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-animation = { module = "androidx.compose.animation:animation"}
-androidx-foundation = { module = "androidx.compose.foundation:foundation"}
-androidx-material = { module = "androidx.compose.material:material"}
 androidx-material3 = { module = "androidx.compose.material3:material3" }
-androidx-savedstate = { module = "androidx.savedstate:savedstate", version.ref = "savedstate" }
-androidx-ui = { module = "androidx.compose.ui:ui" }
-androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
-androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
-androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialExtended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityState" }

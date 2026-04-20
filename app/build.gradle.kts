@@ -25,6 +25,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("keystore.jks")
+            storePassword = "Blacksmith"
+            keyAlias = "quranSDK"
+            keyPassword = "Blacksmith"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

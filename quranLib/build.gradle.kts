@@ -5,6 +5,7 @@ plugins {
     id("kotlin-kapt")
     alias(libs.plugins.ksp)
     alias(libs.plugins.daggeHilt)
+    id("maven-publish")
 }
 
 android {
@@ -85,4 +86,18 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
+}
+
+// ── Maven publishing (required for JitPack) ───────────────────────────────────
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId    = "com.github.Mostafa-hashim-Quran-iqraa"
+                artifactId = "quranLib"
+                version    = "1.0.0"
+            }
+        }
+    }
 }

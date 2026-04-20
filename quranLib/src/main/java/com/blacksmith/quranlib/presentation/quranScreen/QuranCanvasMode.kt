@@ -87,7 +87,7 @@ private const val MUSHAF_LINES_PER_PAGE = 16
 @Composable
 fun QuranPageCanvasModeScreen(
     viewModel: QuranViewModel = hiltViewModel(),
-    quranPagesVersion: Int = QuranConstants.VERSION_KING_FAHD_1421,
+    quranPagesVersion: Int = QuranConstants.VERSION_KING_FAHD_1441,
     isReversePager: Boolean = false,
     pageBackground: Color = White,
     fontColor: Color = Black,

@@ -26,7 +26,7 @@ class QuranActivity :
         viewModel.isEnableJuzClick = intent.getBooleanExtra("isEnableJuzClick", false)
         viewModel.isEnableSuraClick = intent.getBooleanExtra("isEnableSuraClick", false)
         viewModel.isBoldFont = intent.getBooleanExtra("isBoldFont", true)
-        viewModel.quranPagesVersion = intent.getIntExtra("quranPagesVersion", QuranConstants.VERSION_KING_FAHD_1421)
+        viewModel.quranPagesVersion = intent.getIntExtra("quranPagesVersion", QuranConstants.VERSION_KING_FAHD_1441)
         //bg color
         viewModel.bgColor = intent.getStringExtra("selectedBGColor")?: "FDF8F2"
         //font color

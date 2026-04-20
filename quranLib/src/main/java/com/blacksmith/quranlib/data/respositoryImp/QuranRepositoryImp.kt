@@ -24,13 +24,11 @@ class QuranRepositoryImp @Inject constructor(
     @Volatile
     private var _cachedQuranData: QuranFileResponseModel? = null
 
-    override suspend fun getPages(versionNumber: Int): List<PageEntity> =
+    override suspend fun getPages(): List<PageEntity> =
         withContext(Dispatchers.IO) {
             val list = mutableListOf<PageEntity>()
 
-            val cursor = if (versionNumber == QuranConstants.VERSION_KING_FAHD_1421) db.rawQuery("SELECT * FROM pages_v2", null)
-            else db.rawQuery("SELECT * FROM pages_v4", null)
-
+            val cursor = db.rawQuery("SELECT * FROM pages_v4", null)
             cursor.use {
                 while (it.moveToNext()) {
                     list.add(
@@ -120,8 +118,9 @@ class QuranRepositoryImp @Inject constructor(
             // e.g. Juz 2 → 149  (global aya ID that opens Juz 2)
             val juzFirstAyaId: Map<Int, Int> = data.chapters
                 ?.mapNotNull { chapter ->
-                    val juzId     = chapter.id?.toIntOrNull() ?: return@mapNotNull null
-                    val firstAyaId = chapter.first_aya_id?.takeIf { it > 0 } ?: return@mapNotNull null
+                    val juzId = chapter.id?.toIntOrNull() ?: return@mapNotNull null
+                    val firstAyaId =
+                        chapter.first_aya_id?.takeIf { it > 0 } ?: return@mapNotNull null
                     juzId to firstAyaId
                 }
                 ?.toMap()
@@ -130,13 +129,13 @@ class QuranRepositoryImp @Inject constructor(
             val juzSurahsMap = mutableMapOf<Int, MutableList<SurahIndexEntry>>()
 
             data.suras?.forEach { surah ->
-                val surahId     = surah.id?.toIntOrNull() ?: return@forEach
+                val surahId = surah.id?.toIntOrNull() ?: return@forEach
                 val surahNameAr = surah.name_ar ?: ""
 
                 // Build a fast lookup: global aya id → aya text  (only for THIS surah)
                 val ayaTextById: Map<Int, String> = surah.ayas
                     ?.mapNotNull { aya ->
-                        val id   = aya.id?.toIntOrNull() ?: return@mapNotNull null
+                        val id = aya.id?.toIntOrNull() ?: return@mapNotNull null
                         val text = aya.text ?: return@mapNotNull null
                         id to text
                     }
@@ -146,7 +145,7 @@ class QuranRepositoryImp @Inject constructor(
                 val fallbackText = surah.ayas?.firstOrNull()?.text ?: ""
 
                 surah.chapters?.forEach inner@{ juzEntry ->
-                    val juzId     = juzEntry.id?.toIntOrNull()?.takeIf { it in 1..30 } ?: return@inner
+                    val juzId = juzEntry.id?.toIntOrNull()?.takeIf { it in 1..30 } ?: return@inner
                     val pageInJuz = juzEntry.page_number?.takeIf { it > 0 }
                         ?: surah.page_number
                         ?: 1
@@ -159,10 +158,10 @@ class QuranRepositoryImp @Inject constructor(
 
                     juzSurahsMap.getOrPut(juzId) { mutableListOf() }.add(
                         SurahIndexEntry(
-                            surahId      = surahId,
-                            surahNameAr  = surahNameAr,
+                            surahId = surahId,
+                            surahNameAr = surahNameAr,
                             firstAyaText = previewText,
-                            page         = pageInJuz,
+                            page = pageInJuz,
                         )
                     )
                 }
@@ -172,9 +171,9 @@ class QuranRepositoryImp @Inject constructor(
             (1..30).map { juzId ->
                 val outerChapter = data.chapters?.find { it.id?.toIntOrNull() == juzId }
                 JuzIndexItem(
-                    juzId     = juzId,
+                    juzId = juzId,
                     juzNameAr = outerChapter?.name_ar ?: "الجزء $juzId",
-                    surahs    = (juzSurahsMap[juzId] ?: emptyList()).sortedBy { it.page },
+                    surahs = (juzSurahsMap[juzId] ?: emptyList()).sortedBy { it.page },
                 )
             }
         }
@@ -185,10 +184,10 @@ class QuranRepositoryImp @Inject constructor(
             data.suras
                 ?.mapNotNull { surah ->
                     SurahListItem(
-                        surahId     = surah.id?.toIntOrNull()       ?: return@mapNotNull null,
-                        surahNameAr = surah.name_ar                 ?: "",
-                        ayaCount    = surah.aya_numbers             ?: 0,
-                        page        = surah.page_number             ?: 1,
+                        surahId = surah.id?.toIntOrNull() ?: return@mapNotNull null,
+                        surahNameAr = surah.name_ar ?: "",
+                        ayaCount = surah.aya_numbers ?: 0,
+                        page = surah.page_number ?: 1,
                     )
                 }
                 ?.sortedBy { it.surahId }

@@ -767,34 +767,6 @@ fun Content(context: Context = LocalContext.current, viewModel: MainViewModel) {
                 ) {
                     Box(
                         modifier = Modifier
-                            .padding(0.toDP)
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.toDP))
-                            .border(
-                                width = 1.toDP,
-                                color = if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1421) colorPrimary else gray_200,
-                                shape = RoundedCornerShape(8.toDP)
-                            )
-                            .clickable(
-                                onClick = {
-                                    viewModel.quranPagesVersion =
-                                        QuranConstants.VERSION_KING_FAHD_1421
-                                }
-                            )
-                            .background(if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1421) colorPrimary else White)
-                            .padding(4.toDP),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "King Fahd 1421",
-                            fontSize = 14.toSP,
-                            color = if (viewModel.quranPagesVersion == QuranConstants.VERSION_KING_FAHD_1421) White else colorPrimary,
-                            fontFamily = fontNeoSansArabicRegular600
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
                             .padding(start = 10.toDP)
                             .weight(1f)
                             .clip(RoundedCornerShape(8.toDP))

@@ -30,7 +30,7 @@ class BookmarksActivity :
         val highlightColor         = intent.getStringExtra("selectedHighlightColor")         ?: "DBEBF7"
         val ayahNumberColor        = intent.getStringExtra("selectedAyahNumberColor")        ?: "000000"
         val isBoldFont             = intent.getBooleanExtra("isBoldFont",           true)
-        val quranPagesVersion      = intent.getIntExtra("quranPagesVersion",         QuranConstants.VERSION_KING_FAHD_1421)
+        val quranPagesVersion      = intent.getIntExtra("quranPagesVersion",         QuranConstants.VERSION_KING_FAHD_1441)
         val highlightType          = intent.getIntExtra("highlightType",             QuranConstants.HIGHLIGHT_TYPE_AYA)
         val isEnableJuzClick       = intent.getBooleanExtra("isEnableJuzClick",      false)
         val isEnableSuraClick      = intent.getBooleanExtra("isEnableSuraClick",     false)

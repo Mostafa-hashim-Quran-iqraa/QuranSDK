@@ -14,7 +14,7 @@ interface QuranRepository {
 
     suspend fun getQuranData(context: Context): QuranFileResponseModel
 
-    suspend fun getPages(versionNumber: Int): List<PageEntity>
+    suspend fun getPages(): List<PageEntity>
     suspend fun getWords(): List<WordEntity>
 
     suspend fun searchAyas(context: Context, query: String): List<AyaModel>

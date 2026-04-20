@@ -92,7 +92,7 @@ import kotlin.collections.get
 @Composable
 fun QuranPageTextModeScreen(
     viewModel: QuranViewModel = hiltViewModel(),
-    quranPagesVersion: Int = QuranConstants.VERSION_KING_FAHD_1421,
+    quranPagesVersion: Int = QuranConstants.VERSION_KING_FAHD_1441,
     isReversePager: Boolean = false,
     pageBackground: Color = White,
     fontColor: Color = Black,

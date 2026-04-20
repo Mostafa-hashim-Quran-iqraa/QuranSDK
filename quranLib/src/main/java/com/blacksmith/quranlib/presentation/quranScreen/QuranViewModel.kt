@@ -44,7 +44,7 @@ class QuranViewModel @Inject constructor(
         private set
     var quranPageModels = mutableStateListOf<QuranPageModel>()
         private set
-    var pagesVersion = QuranConstants.VERSION_KING_FAHD_1421
+    var pagesVersion = QuranConstants.VERSION_KING_FAHD_1441
 
     private val _typefaceCache = object : LinkedHashMap<String, Typeface>(
         MAX_CACHED_FONTS + 1, 0.75f, true
@@ -131,28 +131,15 @@ class QuranViewModel @Inject constructor(
     }
 
     fun loadTypefaceFromAssets(context: Context, fontFileName: String): Typeface =
-//        Typeface.createFromAsset(context.assets, "fontsPrint1421/$fontFileName")
-        if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421)
-            Typeface.createFromAsset(context.assets, "fontsPrint1421/$fontFileName")
-        else {
-            if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1441)
-                Typeface.createFromAsset(context.assets, "fontsPrint1441Normal/$fontFileName")
-            else
-                Typeface.createFromAsset(context.assets, "fontsPrint1441Colored/$fontFileName")
-        }
+        if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1441)
+            Typeface.createFromAsset(context.assets, "fontsPrint1441Normal/$fontFileName")
+        else
+            Typeface.createFromAsset(context.assets, "fontsPrint1441Colored/$fontFileName")
 
     fun loadTypefaceFromRes(context: Context, fontResId: Int): Typeface? =
         ResourcesCompat.getFont(context, fontResId)
 
-    private fun fontFileNameForPage(page: Int): String {
-//        val p = page.toString().padStart(3, '0')
-//        return "QCF2$p.ttf"
-        val p = if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421)
-            page.toString().padStart(3, '0')
-        else page.toString()
-        return if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421) "QCF2$p.ttf" else "p$page.ttf"
-    }
-
+    private fun fontFileNameForPage(page: Int): String = "p$page.ttf"
 
     // ─── Data loading ─────────────────────────────────────────────────────────
     fun getData(context: Context, versionNumber: Int) {
@@ -175,7 +162,7 @@ class QuranViewModel @Inject constructor(
 
             try {
                 val quranDeferred = async { quranRepository.getQuranData(context) }
-                val pagesDeferred = async { quranRepository.getPages(pagesVersion) }
+                val pagesDeferred = async { quranRepository.getPages() }
                 val wordsDeferred = async { quranRepository.getWords() }
 
                 val quranFileResponseModel = quranDeferred.await()
@@ -212,8 +199,7 @@ class QuranViewModel @Inject constructor(
                                         chapterMap[ayaModel.chapter_id] ?: EMPTY_CHAPTER
                                     WordModel(
                                         id = word.id,
-                                        glyph = if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1421) word.glyphV2
-                                            ?: "" else word.glyphV4 ?: "",
+                                        glyph = word.glyphV4 ?: "",
                                         wordText = word.wordText ?: "",
                                         location = word.location,
                                         surahId = word.surah ?: 0,

@@ -29,7 +29,7 @@ open class MainViewModel @Inject constructor(
     var isEnableJuzClick by mutableStateOf(false)
     var isEnableSuraClick by mutableStateOf(false)
     var isBoldFont by mutableStateOf(true)
-    var quranPagesVersion by mutableIntStateOf(QuranConstants.VERSION_KING_FAHD_1421)
+    var quranPagesVersion by mutableIntStateOf(QuranConstants.VERSION_KING_FAHD_1441)
 
     init {
         initBGColorList()

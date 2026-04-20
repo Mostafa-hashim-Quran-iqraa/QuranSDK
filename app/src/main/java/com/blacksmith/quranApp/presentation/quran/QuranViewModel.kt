@@ -82,7 +82,7 @@ open class QuranViewModel @Inject constructor(
     fun isErrorWord(context: Context, location: String): Boolean =
         WordErrorManager.isErrorWord(context, location)
 
-    var quranPagesVersion by mutableIntStateOf(QuranConstants.VERSION_KING_FAHD_1421)
+    var quranPagesVersion by mutableIntStateOf(QuranConstants.VERSION_KING_FAHD_1441)
 
     // ─── Search state ─────────────────────────────────────────────────────────
     var isSearchVisible by mutableStateOf(false)

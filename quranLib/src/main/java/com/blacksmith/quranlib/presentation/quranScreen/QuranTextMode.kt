@@ -466,7 +466,7 @@ fun Page(
                 .fillMaxSize()
         ) {
             val lineHeightDp = remember(constraints.maxHeight) {
-                with(density) { (constraints.maxHeight / QuranViewModel.Companion.MUSHAF_LINES_PER_PAGE.toFloat()).toDp() }
+                with(density) { (constraints.maxHeight / QuranViewModel.Companion.QURAN_LINES_PER_PAGE.toFloat()).toDp() }
             }
             Column(
                 modifier = Modifier

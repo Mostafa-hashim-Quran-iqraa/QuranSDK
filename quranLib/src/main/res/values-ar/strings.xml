@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloading_quran_data">جاري تنزيل ملفات المصحف…</string>
+    <string name="downloading_quran_fonts">جاري تنزيل خطوط المصحف…</string>
+    <string name="error_while_downloading_files">حدث خطأ أثناء تنزيل الملفات!</string>
+    <string name="holy_quran">القرآن الكريم</string>
+    <string name="downloading_failed">فشل التنزيل</string>
+    <string name="preparing_quran_files">جاري إعداد ملفات المصحف…</string>
+    <string name="try_again">إعادة المحاولة</string>
+</resources>

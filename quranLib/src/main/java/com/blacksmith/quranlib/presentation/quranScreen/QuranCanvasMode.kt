@@ -114,59 +114,61 @@ fun QuranPageCanvasModeScreen(
     onWordClicked: (WordModel, Int) -> Unit = { _, _ -> },
     onPageTap: () -> Unit = {},
 ) {
-    val context = LocalContext.current
-    ComposableLifecycle { _, event ->
-        if (event == Lifecycle.Event.ON_START && !viewModel.isDataLoaded) {
-            viewModel.getData(context, quranPagesVersion)
-        }
-    }
-
-    val initialPage = pageToOpen.coerceIn(1, 604) - 1
-    val pagerState = rememberPagerState(initialPage = initialPage) { 604 }
-
-    LaunchedEffect(pagerState.currentPage) {
-        viewModel.preloadFontsAround(context, pagerState.currentPage + 1, range = 3)
-    }
-
-    LaunchedEffect(pageToOpen) {
-        if (pageToOpen > 0) {
-            val targetIndex = pageToOpen.coerceIn(1, 604) - 1
-            // Start loading the target page's font proactively so it is ready
-            // (or loading) by the time the pager animation finishes.
-            viewModel.preloadFontsAround(context, pageToOpen, range = 1)
-            if (targetIndex != pagerState.currentPage) {
-                pagerState.animateScrollToPage(targetIndex)
+    QuranDataGuard(versionNumber = quranPagesVersion) {
+        val context = LocalContext.current
+        ComposableLifecycle { _, event ->
+            if (event == Lifecycle.Event.ON_START && !viewModel.isDataLoaded) {
+                viewModel.getData(context, quranPagesVersion)
             }
         }
+
+        val initialPage = pageToOpen.coerceIn(1, 604) - 1
+        val pagerState = rememberPagerState(initialPage = initialPage) { 604 }
+
+        LaunchedEffect(pagerState.currentPage) {
+            viewModel.preloadFontsAround(context, pagerState.currentPage + 1, range = 3)
+        }
+
+        LaunchedEffect(pageToOpen) {
+            if (pageToOpen > 0) {
+                val targetIndex = pageToOpen.coerceIn(1, 604) - 1
+                // Start loading the target page's font proactively so it is ready
+                // (or loading) by the time the pager animation finishes.
+                viewModel.preloadFontsAround(context, pageToOpen, range = 1)
+                if (targetIndex != pagerState.currentPage) {
+                    pagerState.animateScrollToPage(targetIndex)
+                }
+            }
+        }
+        QuranContent(
+            context = context,
+            pagerState = pagerState,
+            viewModel = viewModel,
+            quranPagesVersion = quranPagesVersion,
+            isReversePager = isReversePager,
+            pageBackground = pageBackground,
+            fontColor = fontColor,
+            suraHeaderColor = suraHeaderColor,
+            suraNameColor = suraNameColor,
+            highlightColor = highlightColor,
+            ayaNumberInSuraToHighlight = ayaNumberInSuraToHighlight,
+            surahIdToHighlight = surahIdToHighlight,
+            bookmarkedAyas = bookmarkedAyas,
+            bookmarkHighlightColor = bookmarkHighlightColor,
+            errorWordLocations = errorWordLocations,
+            errorHighlightColor = errorHighlightColor,
+            ayahNumberColor = ayahNumberColor,
+            highlightType = highlightType,
+            isSurahClickable = isSurahClickable,
+            isJuzClickable = isJuzClickable,
+            isFontBold = isFontBold,
+            onClickJuzName = onClickJuzName,
+            onClickSurahName = onClickSurahName,
+            onWordLongPressed = onWordLongPressed,
+            onWordClicked = onWordClicked,
+            onPageTap = onPageTap,
+        )
     }
-    QuranContent(
-        context = context,
-        pagerState = pagerState,
-        viewModel = viewModel,
-        quranPagesVersion = quranPagesVersion,
-        isReversePager = isReversePager,
-        pageBackground = pageBackground,
-        fontColor = fontColor,
-        suraHeaderColor = suraHeaderColor,
-        suraNameColor = suraNameColor,
-        highlightColor = highlightColor,
-        ayaNumberInSuraToHighlight = ayaNumberInSuraToHighlight,
-        surahIdToHighlight = surahIdToHighlight,
-        bookmarkedAyas = bookmarkedAyas,
-        bookmarkHighlightColor = bookmarkHighlightColor,
-        errorWordLocations = errorWordLocations,
-        errorHighlightColor = errorHighlightColor,
-        ayahNumberColor = ayahNumberColor,
-        highlightType = highlightType,
-        isSurahClickable = isSurahClickable,
-        isJuzClickable = isJuzClickable,
-        isFontBold = isFontBold,
-        onClickJuzName = onClickJuzName,
-        onClickSurahName = onClickSurahName,
-        onWordLongPressed = onWordLongPressed,
-        onWordClicked = onWordClicked,
-        onPageTap = onPageTap,
-    )
 }
 
 // =============================================================================

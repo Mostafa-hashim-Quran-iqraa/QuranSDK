@@ -30,6 +30,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import androidx.core.graphics.createBitmap
 import com.blacksmith.quranlib.data.util.QuranConstants
+import com.blacksmith.quranlib.data.util.QuranDownloadManager
 
 @HiltViewModel
 class QuranViewModel @Inject constructor(
@@ -75,18 +76,7 @@ class QuranViewModel @Inject constructor(
         val EMPTY_AYA = AyaModel()
         const val TOTAL_PAGES = 604
         private const val MAX_CACHED_FONTS = 30
-        const val MUSHAF_LINES_PER_PAGE = 16
-
-        // Samsung S25 Ultra: textSize=75px
-        // أكبر كلمة طبيعية = 278px = 3.71×ts
-        // أصغر over-report مؤكد = 436px = 5.81×ts
-        // threshold = 4.5× يفصل بينهم بأمان
-        private const val UPPER_THRESHOLD_RATIO = 4.5f
-        private const val LOWER_THRESHOLD_RATIO = 0.4f
-
-        // حجم الـ bitmap المؤقت للقياس (بالـ textSize units)
-        private const val BITMAP_WIDTH_RATIO = 8
-        private const val BITMAP_HEIGHT_RATIO = 2
+        const val QURAN_LINES_PER_PAGE = 16
     }
 
     // ─── Font helpers ─────────────────────────────────────────────────────────
@@ -96,7 +86,7 @@ class QuranViewModel @Inject constructor(
         if (cached != null) return cached
 
         viewModelScope.launch(Dispatchers.IO) {
-            val typeface = loadTypefaceFromAssets(context, key)
+            val typeface = loadTypefaceFromStorage(context, key)
             synchronized(_fontCacheLock) { _typefaceCache[key] = typeface }
             withContext(Dispatchers.Main) { fontReadyState[page] = true }
         }
@@ -123,18 +113,28 @@ class QuranViewModel @Inject constructor(
                 val key = fontFileNameForPage(page)
                 val alreadyCached = synchronized(_fontCacheLock) { _typefaceCache.containsKey(key) }
                 if (alreadyCached) continue
-                val typeface = loadTypefaceFromAssets(context, key)
+                val typeface = loadTypefaceFromStorage(context, key)
                 synchronized(_fontCacheLock) { _typefaceCache[key] = typeface }
                 withContext(Dispatchers.Main) { fontReadyState[page] = true }
             }
         }
     }
 
-    fun loadTypefaceFromAssets(context: Context, fontFileName: String): Typeface =
-        if (pagesVersion == QuranConstants.VERSION_KING_FAHD_1441)
-            Typeface.createFromAsset(context.assets, "fontsPrint1441Normal/$fontFileName")
-        else
-            Typeface.createFromAsset(context.assets, "fontsPrint1441Colored/$fontFileName")
+    fun loadTypefaceFromStorage(context: Context, fontFileName: String): Typeface {
+        val fontsDir = QuranDownloadManager.fontsDir(context, pagesVersion)
+        // 1. Flat location — fonts extracted directly into fontsDir
+        val flatFile = java.io.File(fontsDir, fontFileName)
+        if (flatFile.exists()) return Typeface.createFromFile(flatFile)
+        // 2. One level deep — zip may have contained a single top-level subdirectory
+        //    e.g. fontsDir/fontsPrint1441Normal/p1.ttf
+        fontsDir.listFiles()?.firstOrNull { it.isDirectory }?.let { sub ->
+            val nestedFile = java.io.File(sub, fontFileName)
+            if (nestedFile.exists()) return Typeface.createFromFile(nestedFile)
+        }
+        // QuranDataGuard guarantees fonts are downloaded before we reach here,
+        // so if we get this far the zip structure is unexpected — return default.
+        return Typeface.DEFAULT
+    }
 
     fun loadTypefaceFromRes(context: Context, fontResId: Int): Typeface? =
         ResourcesCompat.getFont(context, fontResId)

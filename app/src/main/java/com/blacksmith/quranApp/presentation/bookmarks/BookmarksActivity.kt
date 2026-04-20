@@ -10,6 +10,7 @@ import com.blacksmith.quranApp.presentation.base.BaseActivity
 import com.blacksmith.quranApp.presentation.base.theme.White
 import com.blacksmith.quranApp.presentation.quran.QuranActivity
 import com.blacksmith.quranlib.data.util.QuranConstants
+import com.blacksmith.quranlib.presentation.quranScreen.QuranDataGuard
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -36,6 +37,7 @@ class BookmarksActivity :
         val isEnableSuraClick      = intent.getBooleanExtra("isEnableSuraClick",     false)
 
         Surface(color = White, modifier = Modifier.fillMaxSize()) {
+            QuranDataGuard(versionNumber = quranPagesVersion, needsFonts = false) {
             BookmarksScreen(
                 viewModel = viewModel,
                 onNavigateTo = { page, ayaNumber, surahId ->
@@ -61,6 +63,7 @@ class BookmarksActivity :
                     )
                 },
             )
+            } // QuranDataGuard
         }
     }
 }

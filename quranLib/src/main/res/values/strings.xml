@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloading_quran_data">Downloading Quran Data…</string>
+    <string name="downloading_quran_fonts">Downloading Quran Fonts…</string>
+    <string name="error_while_downloading_files">Error while downloading files!</string>
+    <string name="holy_quran">Holy Quran</string>
+    <string name="downloading_failed">Downloading Failed</string>
+    <string name="preparing_quran_files">Preparing quran files…</string>
+    <string name="try_again">Try Again</string>
+</resources>

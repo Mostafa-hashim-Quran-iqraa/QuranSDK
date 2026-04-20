@@ -2,13 +2,14 @@ package com.blacksmith.quranlib.data.respositoryImp
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import com.blacksmith.quranlib.data.local.database.DatabaseProvider
 import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.JuzIndexItem
 import com.blacksmith.quranlib.data.model.PageEntity
 import com.blacksmith.quranlib.data.model.SurahIndexEntry
 import com.blacksmith.quranlib.data.model.SurahListItem
 import com.blacksmith.quranlib.data.model.WordEntity
-import com.blacksmith.quranlib.data.util.QuranConstants
+import com.blacksmith.quranlib.data.util.QuranDownloadManager
 import com.blacksmith.quranlib.domain.parseFromJson
 import com.blacksmith.quranlib.domain.remote.QuranRepository
 import com.blacksmith.quranlib.domain.response.QuranFileResponseModel
@@ -18,8 +19,16 @@ import java.io.IOException
 import javax.inject.Inject
 
 class QuranRepositoryImp @Inject constructor(
-    private val db: SQLiteDatabase
+    private val context: Context
 ) : QuranRepository {
+
+    /**
+     * Opens the downloaded DB lazily.
+     * QuranDataGuard guarantees the file exists before any screen that needs it is shown.
+     */
+    private val db: SQLiteDatabase by lazy {
+        DatabaseProvider.openDatabase(context, QuranDownloadManager.QURAN_DB_FILE_NAME)
+    }
 
     @Volatile
     private var _cachedQuranData: QuranFileResponseModel? = null
@@ -51,9 +60,7 @@ class QuranRepositoryImp @Inject constructor(
 
     override suspend fun getWords(): List<WordEntity> = withContext(Dispatchers.IO) {
         val list = mutableListOf<WordEntity>()
-
         val cursor = db.rawQuery("SELECT * FROM words", null)
-
         cursor.use {
             while (it.moveToNext()) {
                 list.add(
@@ -70,7 +77,6 @@ class QuranRepositoryImp @Inject constructor(
                 )
             }
         }
-
         list
     }
 
@@ -78,9 +84,9 @@ class QuranRepositoryImp @Inject constructor(
         _cachedQuranData?.let { return it }
         var quranFileResponseModel = QuranFileResponseModel()
         try {
-            val quranText = context.assets.open("quran.json").bufferedReader().use {
-                it.readText()
-            }
+            // QuranDataGuard guarantees the downloaded file exists before we reach here
+            val quranText = QuranDownloadManager.jsonFile(context)
+                .bufferedReader().use { it.readText() }
             quranFileResponseModel =
                 parseFromJson<QuranFileResponseModel>(quranText) ?: QuranFileResponseModel()
             _cachedQuranData = quranFileResponseModel
@@ -94,10 +100,8 @@ class QuranRepositoryImp @Inject constructor(
         withContext(Dispatchers.IO) {
             val normalizedQuery = query.trim()
             if (normalizedQuery.length < 2) return@withContext emptyList()
-
             val data = _cachedQuranData ?: getQuranData(context)
             val results = mutableListOf<AyaModel>()
-
             data.suras?.forEach { surah ->
                 surah.ayas?.forEach { aya ->
                     val ayaSearchText = aya.aya_text ?: ""
@@ -113,7 +117,6 @@ class QuranRepositoryImp @Inject constructor(
     override suspend fun getJuzIndexWithSurasInsideJuz(context: Context): List<JuzIndexItem> =
         withContext(Dispatchers.IO) {
             val data = _cachedQuranData ?: getQuranData(context)
-
             // Build juzId → first_aya_id lookup from the outer chapters list
             // e.g. Juz 2 → 149  (global aya ID that opens Juz 2)
             val juzFirstAyaId: Map<Int, Int> = data.chapters
@@ -125,13 +128,10 @@ class QuranRepositoryImp @Inject constructor(
                 }
                 ?.toMap()
                 ?: emptyMap()
-
             val juzSurahsMap = mutableMapOf<Int, MutableList<SurahIndexEntry>>()
-
             data.suras?.forEach { surah ->
                 val surahId = surah.id?.toIntOrNull() ?: return@forEach
                 val surahNameAr = surah.name_ar ?: ""
-
                 // Build a fast lookup: global aya id → aya text  (only for THIS surah)
                 val ayaTextById: Map<Int, String> = surah.ayas
                     ?.mapNotNull { aya ->
@@ -141,21 +141,17 @@ class QuranRepositoryImp @Inject constructor(
                     }
                     ?.toMap()
                     ?: emptyMap()
-
                 val fallbackText = surah.ayas?.firstOrNull()?.text ?: ""
-
                 surah.chapters?.forEach inner@{ juzEntry ->
                     val juzId = juzEntry.id?.toIntOrNull()?.takeIf { it in 1..30 } ?: return@inner
                     val pageInJuz = juzEntry.page_number?.takeIf { it > 0 }
                         ?: surah.page_number
                         ?: 1
-
                     // Use the text of the aya that opens this juz if it belongs to
                     // this surah; otherwise fall back to the surah's own first aya.
                     val previewText = juzFirstAyaId[juzId]
                         ?.let { firstId -> ayaTextById[firstId] }
                         ?: fallbackText
-
                     juzSurahsMap.getOrPut(juzId) { mutableListOf() }.add(
                         SurahIndexEntry(
                             surahId = surahId,
@@ -166,13 +162,12 @@ class QuranRepositoryImp @Inject constructor(
                     )
                 }
             }
-
             // Build final 30-juz list sorted by page within each juz
             (1..30).map { juzId ->
                 val outerChapter = data.chapters?.find { it.id?.toIntOrNull() == juzId }
                 JuzIndexItem(
                     juzId = juzId,
-                    juzNameAr = outerChapter?.name_ar ?: "الجزء $juzId",
+                    juzNameAr = outerChapter?.name_ar ?: "",
                     surahs = (juzSurahsMap[juzId] ?: emptyList()).sortedBy { it.page },
                 )
             }

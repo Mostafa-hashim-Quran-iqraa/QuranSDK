@@ -54,7 +54,7 @@ In your **app** `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.Mostafa-hashim-Quran-iqraa.QuranSDK:quranLib:LATEST_VERSION")
+    implementation("com.github.Mostafa-hashim-Quran-iqraa:QuranSDK:LATEST_VERSION")
 }
 ```
 

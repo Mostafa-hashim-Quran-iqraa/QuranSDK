@@ -68,7 +68,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.converter.gson)
     // Compose dependencies
@@ -96,7 +96,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId    = "com.github.Mostafa-hashim-Quran-iqraa"
                 artifactId = "quranLib"
-                version    = "1.0.0"
+                version    = "1.0.1"
             }
         }
     }

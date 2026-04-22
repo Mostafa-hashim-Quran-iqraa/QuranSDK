@@ -88,9 +88,9 @@ dependencies {
     implementation(libs.glide.compose)
     implementation(libs.glide)
     ksp(libs.glide.compiler)
-
+    //hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
     //encrypted shared prefs

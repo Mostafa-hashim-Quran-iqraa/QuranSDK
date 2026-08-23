@@ -11,7 +11,7 @@ plugins {
 android {
     namespace = "com.blacksmith.quranlib"
     compileSdk {
-        version = release(36) {
+        version = release(37) {
             minorApiLevel = 1
         }
     }
@@ -96,7 +96,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId    = "com.github.Mostafa-hashim-Quran-iqraa"
                 artifactId = "quranLib"
-                version    = "1.0.1"
+                version    = "1.0.2"
             }
         }
     }

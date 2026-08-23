@@ -10,7 +10,7 @@ plugins {
 android {
     namespace = "com.blacksmith.quranApp"
     compileSdk {
-        version = release(36) {
+        version = release(37) {
             minorApiLevel = 1
         }
     }

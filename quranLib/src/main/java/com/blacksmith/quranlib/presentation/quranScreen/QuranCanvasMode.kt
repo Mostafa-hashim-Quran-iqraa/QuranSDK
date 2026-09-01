@@ -113,6 +113,7 @@ fun QuranPageCanvasModeScreen(
     // Last Int = page number (1-based) where the click happened
     onWordClicked: (WordModel, Int) -> Unit = { _, _ -> },
     onPageTap: () -> Unit = {},
+    onPageChanged: (Int) -> Unit = {},
 ) {
     QuranDataGuard(versionNumber = quranPagesVersion) {
         val context = LocalContext.current
@@ -127,6 +128,7 @@ fun QuranPageCanvasModeScreen(
 
         LaunchedEffect(pagerState.currentPage) {
             viewModel.preloadFontsAround(context, pagerState.currentPage + 1, range = 3)
+            onPageChanged(pagerState.currentPage + 1)
         }
 
         LaunchedEffect(pageToOpen) {

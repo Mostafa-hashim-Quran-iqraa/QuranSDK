@@ -106,7 +106,8 @@ fun QuranPageTextModeScreen(
     isFontBold: Boolean = false,
     pageToOpen: Int = 0,
     onClickJuzName: (ChapterModel) -> Unit = {},
-    onClickSurahName: (SurahModel) -> Unit = {}
+    onClickSurahName: (SurahModel) -> Unit = {},
+    onPageChanged: (Int) -> Unit = {},
 ) {
     val context = LocalContext.current
     ComposableLifecycle { _, event ->
@@ -156,6 +157,7 @@ fun QuranPageTextModeScreen(
         onClickJuzName = onClickJuzName,
         onClickSurahName = onClickSurahName,
         isFontBold = isFontBold,
+        onPageChanged = onPageChanged,
     )
 }
 
@@ -180,10 +182,12 @@ fun Content(
     isJuzClickable: Boolean,
     isFontBold: Boolean,
     onClickJuzName: (ChapterModel) -> Unit = {},
-    onClickSurahName: (SurahModel) -> Unit = {}
+    onClickSurahName: (SurahModel) -> Unit = {},
+    onPageChanged: (Int) -> Unit = {},
 ) {
     LaunchedEffect(pagerState.currentPage) {
         viewModel.preloadFontsAround(context, pagerState.currentPage + 1, range = 3)
+        onPageChanged(pagerState.currentPage + 1)
     }
 
     Surface(color = pageBackground, modifier = Modifier.fillMaxSize()) {

@@ -487,7 +487,7 @@ private fun CanvasQuranPage(
                     // نسجل موقع الـ Canvas في الـ window مرة واحدة
                     canvasWindowOffset = coords.positionInWindow()
                 }
-                .pointerInput(pageModel, highlightType) {
+                .pointerInput(pageModel, highlightType, errorWordLocations) {
                     detectTapGestures(
                         onTap = { tapOffset ->
                             selectedWord = null

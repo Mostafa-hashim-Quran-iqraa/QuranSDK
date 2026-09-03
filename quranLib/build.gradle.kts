@@ -96,7 +96,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId    = "com.github.Mostafa-hashim-Quran-iqraa"
                 artifactId = "quranLib"
-                version    = "1.0.4"
+                version    = "1.0.5"
             }
         }
     }

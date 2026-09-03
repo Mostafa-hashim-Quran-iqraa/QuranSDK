@@ -2,6 +2,7 @@ package com.blacksmith.quranlib.data.respositoryImp
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 import com.blacksmith.quranlib.data.local.database.DatabaseProvider
 import com.blacksmith.quranlib.data.model.AyaModel
 import com.blacksmith.quranlib.data.model.JuzIndexItem
@@ -98,19 +99,40 @@ class QuranRepositoryImp @Inject constructor(
 
     override suspend fun searchAyas(context: Context, query: String): List<AyaModel> =
         withContext(Dispatchers.IO) {
-            val normalizedQuery = query.trim()
+            // Strip tashkeel from the query so a diacritized paste (e.g. copied from the
+            // Mushaf page) still matches. Stripping tashkeel alone isn't enough though:
+            // `text` (Uthmani rasm, what's shown/copied on the Mushaf page) and aya_text
+            // (simplified spelling) differ in actual letters too, not just marks -- e.g.
+            // "ٱ" (alef wasla) in text vs plain "ا" in aya_text, or "ملك" in text vs
+            // "مالك" in aya_text. So a query is checked against both: aya_text as-is
+            // (for a normally-typed query), and text with its own tashkeel stripped
+            // (for a query pasted straight from the Mushaf, still in Uthmani rasm).
+            //
+            // The Mushaf's own "copy" action appends a citation line after the aya text
+            // (e.g. "...\nسورة الفاتحة - آية 6"), which would never be found as a
+            // substring of any aya. That citation always starts on a new line, so drop
+            // everything from the first newline onward before matching.
+            val normalizedQuery = query.substringBefore('\n').trim().stripTashkeel()
+            Log.d("QURAN_SEARCH_DEBUG", "raw=\"$query\" normalized=\"$normalizedQuery\"")
             if (normalizedQuery.length < 2) return@withContext emptyList()
             val data = _cachedQuranData ?: getQuranData(context)
+            Log.d("QURAN_SEARCH_DEBUG", "surasCount=${data.suras?.size}")
             val results = mutableListOf<AyaModel>()
             data.suras?.forEach { surah ->
                 surah.ayas?.forEach { aya ->
                     val ayaSearchText = aya.aya_text ?: ""
-                    if (ayaSearchText.contains(normalizedQuery)) {
+                    val matches = ayaSearchText.contains(normalizedQuery) ||
+                        (aya.text ?: "").stripTashkeel().contains(normalizedQuery)
+                    if (matches) {
                         results.add(aya.copy(surah = surah))
-                        if (results.size >= 30) return@withContext results
+                        if (results.size >= 30) {
+                            Log.d("QURAN_SEARCH_DEBUG", "resultsCount=${results.size} (capped)")
+                            return@withContext results
+                        }
                     }
                 }
             }
+            Log.d("QURAN_SEARCH_DEBUG", "resultsCount=${results.size}")
             results
         }
 
@@ -188,4 +210,42 @@ class QuranRepositoryImp @Inject constructor(
                 ?.sortedBy { it.surahId }
                 ?: emptyList()
         }
+}
+
+/**
+ * True for Arabic tashkeel / Quranic annotation marks (harakat, sukun, superscript
+ * alef, Uthmani recitation signs) plus tatweel (kashida), the elongation character
+ * used to visually stretch letter connections in the printed Mushaf layout. Uses
+ * code-point ranges rather than embedding the marks themselves in a string literal,
+ * since combining diacritics are awkward to keep intact through source-file edits.
+ */
+private fun Char.isTashkeel(): Boolean {
+    val c = code
+    return c in 0x0610..0x061A ||
+        c in 0x064B..0x065F ||
+        c == 0x0670 ||
+        c == 0x0640 || // tatweel
+        c in 0x06D6..0x06ED ||
+        c in 0x08D4..0x08FF
+}
+
+/**
+ * Strips tashkeel/tatweel and collapses whitespace runs to a single space (trimmed).
+ * `text` (Uthmani rasm) and word-by-word copied text can otherwise carry stray/extra
+ * spacing -- e.g. an empty leading "word" -- that a plain [String.trim] won't catch.
+ */
+private fun String.stripTashkeel(): String {
+    val sb = StringBuilder(length)
+    var lastWasSpace = false
+    for (ch in this) {
+        if (ch.isTashkeel()) continue
+        if (ch.isWhitespace()) {
+            if (!lastWasSpace) sb.append(' ')
+            lastWasSpace = true
+        } else {
+            sb.append(ch)
+            lastWasSpace = false
+        }
+    }
+    return sb.toString().trim()
 }

@@ -16,6 +16,7 @@ import com.blacksmith.quranlib.data.model.JuzIndexItem
 import com.blacksmith.quranlib.data.util.QuranConstants
 import com.blacksmith.quranlib.data.useCase.QuranSearchUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -93,18 +94,27 @@ open class QuranViewModel @Inject constructor(
     var isSearchLoading by mutableStateOf(false)
         private set
 
+    // Guards against a slower, earlier search (e.g. a longer/tashkeel-heavy
+    // query) resolving after a newer one and overwriting its results.
+    private var searchJob: Job? = null
+
     fun showSearch() { isSearchVisible = true }
 
     fun hideSearch() {
+        searchJob?.cancel()
         isSearchVisible = false
         searchQuery = ""
         searchResults = emptyList()
     }
 
-    fun clearSearchResults() { searchResults = emptyList() }
+    fun clearSearchResults() {
+        searchJob?.cancel()
+        searchResults = emptyList()
+    }
 
     fun searchAyas(context: Context, query: String) {
-        viewModelScope.launch {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             isSearchLoading = true
             searchResults = try {
                 quranSearch.searchAyas(context, query)

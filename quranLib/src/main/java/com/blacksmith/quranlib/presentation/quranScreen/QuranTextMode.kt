@@ -368,7 +368,13 @@ fun Page(
     val selectedText = remember(selectedWord, selectedAyah, selectedSurah, isAyaHighlight) {
         if (isAyaHighlight && selectedAyah != null) {
             val ayahWords = wordsByAyah[selectedSurah to selectedAyah] ?: emptyList()
-            "${ayahWords.joinToString(" ") { it.wordText }}\nسورة ${ayahWords.firstOrNull()?.surahName} - آية $selectedAyah"
+            // The ayah-number marker (e.g. "٦") is stored as a trailing pseudo-word in
+            // this list for rendering purposes -- exclude it from the copied text, or
+            // it ends up appended after the last real word and breaks exact-text search.
+            val realWords = ayahWords.filterNot { word ->
+                word.wordText.isNotEmpty() && word.wordText.all { it in '٠'..'٩' }
+            }
+            "${realWords.joinToString(" ") { it.wordText }}\nسورة ${ayahWords.firstOrNull()?.surahName} - آية $selectedAyah"
         } else {
             selectedWord?.let { "${it.wordText}\nسورة ${it.surahName} - آية ${it.ayah}" } ?: ""
         }
